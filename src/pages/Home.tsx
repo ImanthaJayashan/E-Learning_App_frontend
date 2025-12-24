@@ -1,11 +1,13 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import HeroSection from "../components/HeroSection";
 import Footer from "../components/Footer";
 
 const Home: React.FC = () => {
+  const navigate = useNavigate();
+
   const handleClick = (name: string) => {
-    // Temporary action: replace with navigation or modal later
     // eslint-disable-next-line no-alert
     alert(`${name} clicked`);
   };
@@ -48,7 +50,7 @@ const Home: React.FC = () => {
           <button
             type="button"
             aria-label="Eye Problem Detector"
-            onClick={() => handleClick("Eye Problem Detector")}
+            onClick={() => navigate("/eye-problem-detector")}
             style={buttonBase}
           >
             <strong>Eye Problem Detector</strong>
