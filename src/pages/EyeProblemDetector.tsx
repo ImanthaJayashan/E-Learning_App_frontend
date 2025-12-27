@@ -50,8 +50,8 @@ const EyeProblemDetector: React.FC = () => {
             background-image: url('/vecteezy_happy-school-kids-go-to-school_10195647.svg');
             background-repeat: no-repeat;
             background-position: center;
-            background-size: contain;
-            opacity: 0.35;
+            background-size: cover;
+            opacity:0.7 ;
             filter: drop-shadow(0 10px 30px rgba(0,0,0,0.15));
             animation: driftBg 10s ease-in-out infinite;
             z-index: 0;
@@ -72,44 +72,30 @@ const EyeProblemDetector: React.FC = () => {
         <div className="floating-shape" style={{ top: '30%', left: '20%', fontSize: '42px', animation: 'float 7s ease-in-out infinite', animationDelay: '3s' }}>🌟</div>
         
         <main className="eye-main" style={{ position: 'relative', zIndex: 1 }}>
-        <div className="eye-hero" style={{ position: 'relative', zIndex: 1 }}>
-          <div className="eye-bubble eye-bubble-1" />
-          <div className="eye-bubble eye-bubble-2" />
-          <div className="eye-bubble eye-bubble-3" />
+        <div style={{ height: 20 }} />
 
-          <div className="eye-hero-content">
-            <div className="eye-left">
-              <Link className="eye-back" to="/">
-                ← Back to tools
-              </Link>
-              <p className="eye-tag">Ages 5-6 · Gentle checks</p>
-              <h1>Eye Problem Detector</h1>
-              <p className="eye-sub">Follow the bright shapes with your eyes. Quick, kind, and no scary stuff.</p>
-
-              <div className="eye-actions">
-                <button type="button" className="eye-btn">Start</button>
-                <button type="button" className="eye-btn ghost">Steps</button>
+        <section className="shape-videos" style={{ marginBottom: '1.5rem' }}>
+          <h2 style={{ textAlign: 'center', margin: '0 0 1rem', color: '#1a1a1a' }}>Learning Shapes</h2>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gap: '1rem',
+            }}
+          >
+                {["https://www.youtube.com/embed/jlzX8jt0Now?start=16&end=60", "https://www.youtube.com/embed/jlzX8jt0Now?start=62&end=107", "https://www.youtube.com/embed/jlzX8jt0Now?start=108&end=152", "https://www.youtube.com/embed/jlzX8jt0Now?start=334&end=377"].map((src) => (
+              <div key={src} style={{ position: 'relative', paddingTop: '56.25%', borderRadius: 12, overflow: 'hidden', boxShadow: '0 10px 22px rgba(0,0,0,0.12)', background: '#000' }}>
+                <iframe
+                  src={src}
+                  title="Shapes for kids"
+                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: '0' }}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                  allowFullScreen
+                />
               </div>
-
-              <div className="eye-badges">
-                <span className="eye-badge">Bright colors</span>
-                <span className="eye-badge">Super quick</span>
-              </div>
-            </div>
-
-            <div className="eye-right">
-              <div className="eye-illustration">
-                <div className="eye-face" aria-hidden="true">👀</div>
-                <p className="eye-illu-text">Follow the bouncing star!</p>
-                <div className="eye-stars" aria-hidden="true">
-                  <span>★</span>
-                  <span>✦</span>
-                  <span>★</span>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
-        </div>
+        </section>
 
         <section className="eye-steps">
           <h2>Easy steps</h2>
