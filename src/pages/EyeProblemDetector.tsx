@@ -8,6 +8,12 @@ const EyeProblemDetector: React.FC = () => {
   const [gameStarted, setGameStarted] = useState(false);
   const navigate = useNavigate();
 
+  const handleShapeNavigate = (shapeName: string) => {
+    const shapeSlug = shapeName.toLowerCase();
+    localStorage.setItem('selectedShape', shapeSlug);
+    navigate(`/shapes/${shapeSlug}`);
+  };
+
   return (
     <div className="eye-page">
       <Navbar />
@@ -326,8 +332,8 @@ const EyeProblemDetector: React.FC = () => {
               style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                gap: '1.5rem',
-                marginTop: '2rem'
+                gap: '5rem',
+                marginTop: '5rem'
               }}
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
@@ -369,12 +375,14 @@ const EyeProblemDetector: React.FC = () => {
                     }
                   }}
                   whileTap={{ scale: 0.95 }}
+                  onClick={() => handleShapeNavigate(shape.name)}
                   style={{
-                    background: `linear-gradient(135deg, ${shape.color} 0%, ${shape.color}80 100%)`,
+                    background: 'rgba(255,255,255,0.8)',
                     borderRadius: '16px',
                     padding: '2rem 1rem',
                     textAlign: 'center',
                     boxShadow: '0 8px 16px rgba(0,0,0,0.1)',
+                    border: '1px solid rgba(238,242,247,0.6)',
                     cursor: 'pointer',
                     display: 'flex',
                     flexDirection: 'column',
@@ -402,12 +410,12 @@ const EyeProblemDetector: React.FC = () => {
                   />
                   
                   <motion.div
-                    style={{ fontSize: '80px', marginBottom: '1rem', position: 'relative', zIndex: 1 }}
-                    animate={{ scale: [1, 1.1, 1] }}
+                    style={{ fontSize: '80px', marginBottom: '5rem', position: 'relative', zIndex: 1 }}
+                    animate={{ scale: [1, 1.8, 1] }}
                     transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                     whileHover={{
-                      scale: [1.1, 1.3, 1.15],
-                      rotate: [0, -10, 10, 0],
+                      scale: [1.8, 1.9, 1.9],
+                      rotate: [50, -10, 10, 0],
                       transition: { duration: 0.6, ease: "easeInOut" }
                     }}
                   >
@@ -438,7 +446,7 @@ const EyeProblemDetector: React.FC = () => {
                   
                   <motion.h3 
                     style={{ 
-                      color: 'white', 
+                      color: '#111', 
                       fontSize: '24px', 
                       margin: 0, 
                       fontWeight: 'bold',
@@ -457,12 +465,12 @@ const EyeProblemDetector: React.FC = () => {
                   
                   <motion.p 
                     style={{ 
-                      color: 'rgba(255,255,255,0.9)', 
+                      color: '#4b5563', 
                       marginTop: '0.5rem', 
                       fontSize: '14px', 
                       marginBottom: '1.5rem',
                       position: 'relative',
-                      zIndex: 1
+                      zIndex: 1,
                     }}
                     initial={{ opacity: 0.7 }}
                     whileHover={{ 
@@ -474,9 +482,9 @@ const EyeProblemDetector: React.FC = () => {
                   </motion.p>
                   
                   <motion.button
-                    onClick={() => {
-                      localStorage.setItem('selectedShape', shape.name.toLowerCase());
-                      navigate(`/shapes/${shape.name.toLowerCase()}`);
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      handleShapeNavigate(shape.name);
                     }}
                     initial={{ scale: 1, opacity: 0.8 }}
                     whileHover={{ 
@@ -562,15 +570,16 @@ const EyeProblemDetector: React.FC = () => {
                 whileHover={{ scale: 1.05, boxShadow: '0 20px 50px rgba(0,0,0,0.3)' }}
                 whileTap={{ scale: 0.98 }}
                 style={{
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  background: 'rgba(255,255,255,0.2)',
                   borderRadius: '20px',
                   padding: '30px',
                   maxWidth: '600px',
                   margin: '0 auto',
                   boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
                   textAlign: 'center',
-                  color: 'white',
-                  cursor: 'pointer'
+                  color: '#111',
+                  cursor: 'pointer',
+                  border: '1px solid rgba(238,242,247,0.6)'
                 }}
               >
                 <motion.div 
