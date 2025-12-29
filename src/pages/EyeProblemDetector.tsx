@@ -290,42 +290,19 @@ const EyeProblemDetector: React.FC = () => {
             transition={{ duration: 0.9, ease: "easeOut" }}
             viewport={{ once: false, margin: "-50px", amount: 0.2 }}
           >
-            <motion.h2 
-              initial={{ opacity: 0, x: -50 }}
+            <motion.div
+              initial={{ opacity: 0, x: -35 }}
               whileInView={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.7, delay: 0.15 }}
               viewport={{ once: false, margin: "0px", amount: 0.3 }}
-              style={{ textAlign: 'center', margin: '0 0 1rem', color: '#1a1a1a' }}
+              style={{ textAlign: 'center', margin: '0 0 1rem' }}
             >
-              🎬 Learning Shapes
-            </motion.h2>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                gap: '1rem',
-              }}
-            >
-              {["https://www.youtube.com/embed/jlzX8jt0Now?start=16&end=60", "https://www.youtube.com/embed/jlzX8jt0Now?start=62&end=107", "https://www.youtube.com/embed/jlzX8jt0Now?start=108&end=152", "https://www.youtube.com/embed/jlzX8jt0Now?start=334&end=377"].map((src, index) => (
-                <motion.div 
-                  key={src} 
-                  initial={{ opacity: 0, scale: 0.7, y: 50 }}
-                  whileInView={{ opacity: 1, scale: 1, y: 0 }}
-                  transition={{ duration: 0.7, delay: index * 0.15, ease: "easeOut" }}
-                  viewport={{ once: false, margin: "0px", amount: 0.2 }}
-                  whileHover={{ scale: 1.08, boxShadow: '0 20px 40px rgba(0,0,0,0.3)', y: -5 }}
-                  style={{ position: 'relative', paddingTop: '56.25%', borderRadius: 12, overflow: 'hidden', boxShadow: '0 10px 22px rgba(0,0,0,0.12)', background: '#000', cursor: 'pointer' }}
-                >
-                  <iframe
-                    src={src}
-                    title="Shapes for kids"
-                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: '0' }}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-                    allowFullScreen
-                  />
-                </motion.div>
-              ))}
-            </div>
+              <img 
+                src="/Learning-Shapes-12-29-2025.gif" 
+                alt="Learning Shapes" 
+                style={{ maxWidth: '900px', height: 'auto', margin: '0 auto', display: 'block' }}
+              />
+            </motion.div>
 
             {/* Shape Cards */}
             <motion.div
