@@ -15,6 +15,10 @@ const CircleShape: React.FC = () => {
   const [gameDrawnPoints, setGameDrawnPoints] = useState<{x: number, y: number}[]>([]);
   const [gameFeedback, setGameFeedback] = useState<'none' | 'success' | 'encourage'>('none');
   const [showSparkles, setShowSparkles] = useState(false);
+  const [showDemoAnimation, setShowDemoAnimation] = useState(false);
+  const [demoProgress, setDemoProgress] = useState(0);
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const demoAnimationRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     const canvas = gameCanvasRef.current;
@@ -29,6 +33,109 @@ const CircleShape: React.FC = () => {
 
     drawGameGuide(ctx);
   }, []);
+
+  // Demo animation effect
+  useEffect(() => {
+    if (!showDemoAnimation) return;
+
+    const canvas = gameCanvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Redraw guide and animated demo circle
+    drawGameGuide(ctx);
+
+    if (demoProgress > 0) {
+      // Draw animated circle
+      const centerX = 375;
+      const centerY = 350;
+      const radius = 320;
+      const endAngle = (demoProgress / 100) * Math.PI * 2;
+
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, 0, endAngle);
+      ctx.strokeStyle = '#FFD700'; // Gold color for visibility
+      ctx.lineWidth = 14;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+
+      // Draw animated arrow at the end of the demo animation
+      const arrowAngle = endAngle;
+      const arrowX = centerX + Math.cos(arrowAngle) * radius;
+      const arrowY = centerY + Math.sin(arrowAngle) * radius;
+      const nextArrowAngle = arrowAngle + 0.3;
+      const nextArrowX = centerX + Math.cos(nextArrowAngle) * radius;
+      const nextArrowY = centerY + Math.sin(nextArrowAngle) * radius;
+
+      // Animated arrow head - larger and more visible
+      ctx.strokeStyle = '#FF6347';
+      ctx.fillStyle = '#FF6347';
+      ctx.lineWidth = 4;
+      
+      ctx.beginPath();
+      ctx.moveTo(arrowX, arrowY);
+      ctx.lineTo(nextArrowX, nextArrowY);
+      ctx.stroke();
+
+      const headlen = 25;
+      const dirX = nextArrowX - arrowX;
+      const dirY = nextArrowY - arrowY;
+      const dirLen = Math.sqrt(dirX * dirX + dirY * dirY);
+      const ux = dirX / dirLen;
+      const uy = dirY / dirLen;
+
+      ctx.beginPath();
+      ctx.moveTo(nextArrowX, nextArrowY);
+      ctx.lineTo(nextArrowX - ux * headlen - uy * 12, nextArrowY - uy * headlen + ux * 12);
+      ctx.lineTo(nextArrowX - ux * headlen + uy * 12, nextArrowY - uy * headlen - ux * 12);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }, [demoProgress, showDemoAnimation]);
+
+  // Start demo animation when user idles on canvas (loops nonstop)
+  const startDemoAnimation = () => {
+    // Clear existing idle timer
+    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+
+    // Set timer for 1 second of idle before starting
+    idleTimerRef.current = setTimeout(() => {
+      setShowDemoAnimation(true);
+      setDemoProgress(0);
+
+      // Function to run one animation cycle
+      const runAnimationCycle = () => {
+        let progress = 0;
+        demoAnimationRef.current = setInterval(() => {
+          progress += 2.5; // Slower increment for smoother animation
+          if (progress > 100) {
+            progress = 100;
+            if (demoAnimationRef.current) clearInterval(demoAnimationRef.current);
+            
+            // After animation completes, wait 1 second then restart nonstop
+            setTimeout(() => {
+              setDemoProgress(0);
+              runAnimationCycle(); // Loop continuously
+            }, 1000);
+          }
+          setDemoProgress(progress);
+        }, 50);
+      };
+
+      // Start the continuous animation loop
+      runAnimationCycle();
+    }, 1000); // Show demo after 1 second of idle
+  };
+
+  const stopDemoAnimation = () => {
+    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    if (demoAnimationRef.current) clearInterval(demoAnimationRef.current);
+    setShowDemoAnimation(false);
+    setDemoProgress(0);
+  };
 
   // Redraw game canvas when feedback changes
   useEffect(() => {
@@ -61,6 +168,55 @@ const CircleShape: React.FC = () => {
     ctx.arc(375, 350, 6, 0, Math.PI * 2);
     ctx.fillStyle = '#B0E0E6';
     ctx.fill();
+
+    // Draw direction arrows around the circle
+    drawArrowGuides(ctx);
+  };
+
+  const drawArrowGuides = (ctx: CanvasRenderingContext2D) => {
+    const centerX = 375;
+    const centerY = 350;
+    const radius = 320;
+    const arrowCount = 8; // 8 arrows around the circle
+
+    for (let i = 0; i < arrowCount; i++) {
+      const angle = (i / arrowCount) * Math.PI * 2;
+      const nextAngle = ((i + 0.3) / arrowCount) * Math.PI * 2;
+
+      // Arrow position on circle
+      const x = centerX + Math.cos(angle) * radius;
+      const y = centerY + Math.sin(angle) * radius;
+
+      // Arrow tip position (slightly ahead)
+      const tipX = centerX + Math.cos(nextAngle) * radius;
+      const tipY = centerY + Math.sin(nextAngle) * radius;
+
+      // Draw arrow
+      ctx.strokeStyle = 'rgba(255, 165, 0, 0.6)';
+      ctx.fillStyle = 'rgba(255, 165, 0, 0.6)';
+      ctx.lineWidth = 2;
+
+      // Arrow line
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(tipX, tipY);
+      ctx.stroke();
+
+      // Arrow head
+      const headlen = 15;
+      const dirX = tipX - x;
+      const dirY = tipY - y;
+      const dirLen = Math.sqrt(dirX * dirX + dirY * dirY);
+      const ux = dirX / dirLen;
+      const uy = dirY / dirLen;
+
+      ctx.beginPath();
+      ctx.moveTo(tipX, tipY);
+      ctx.lineTo(tipX - ux * headlen - uy * 8, tipY - uy * headlen + ux * 8);
+      ctx.lineTo(tipX - ux * headlen + uy * 8, tipY - uy * headlen - ux * 8);
+      ctx.closePath();
+      ctx.fill();
+    }
   };
 
   const redrawGamePath = (ctx: CanvasRenderingContext2D) => {
@@ -84,6 +240,7 @@ const CircleShape: React.FC = () => {
   // Game drawing handlers
   const startGameDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     e.preventDefault();
+    stopDemoAnimation();
     setIsGameDrawing(true);
     setGameFeedback('none');
     setShowSparkles(false);
@@ -105,7 +262,11 @@ const CircleShape: React.FC = () => {
   };
 
   const continueGameDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    if (!isGameDrawing) return;
+    if (!isGameDrawing) {
+      // If hovering but not drawing, trigger demo animation
+      startDemoAnimation();
+      return;
+    }
     e.preventDefault();
 
     const canvas = gameCanvasRef.current;
@@ -191,6 +352,7 @@ const CircleShape: React.FC = () => {
   };
 
   const resetGame = () => {
+    stopDemoAnimation();
     setGameDrawnPoints([]);
     setGameFeedback('none');
     setShowSparkles(false);
