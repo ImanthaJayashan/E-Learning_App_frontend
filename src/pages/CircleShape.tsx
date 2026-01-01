@@ -292,10 +292,11 @@ const CircleShape: React.FC = () => {
                 🌐 Interactive 3D Objects - Drag to Rotate!
               </h3>
               
-              {/* Sketchfab 3D Model on Left */}
+              {/* 3D Models in a row */}
               <div style={{ display: "flex", gap: "2rem", alignItems: "center", justifyContent: "center", marginBottom: "1.5rem", flexWrap: "wrap" }}>
-                <div style={{ flex: "0 0 auto", width: "100%", maxWidth: "500px" }}>
-                  <div className="sketchfab-embed-wrapper" style={{ height: "450px", borderRadius: "12px", overflow: "hidden", boxShadow: "0 0px 20px rgba(0,0,0,0.3)", border: "none" }}>
+                {/* Basketball */}
+                <div style={{ flex: "0 0 auto", width: "100%", maxWidth: "450px" }}>
+                  <div className="sketchfab-embed-wrapper" style={{ height: "400px", borderRadius: "12px", overflow: "hidden", boxShadow: "0 0px 20px rgba(0,0,0,0.3)", border: "none" }}>
                     <iframe
                       title="Dribbble Basketball"
                       frameBorder="0"
@@ -305,9 +306,45 @@ const CircleShape: React.FC = () => {
                     />
                   </div>
                 </div>
-                
-                {/* Right side content */}
-                <div style={{ flex: "1", minWidth: "300px" }}>
+
+                {/* Clock */}
+                <div style={{ flex: "0 0 auto", width: "100%", maxWidth: "450px" }}>
+                  <div className="sketchfab-embed-wrapper" style={{ height: "400px", borderRadius: "12px", overflow: "hidden", boxShadow: "0 0px 20px rgba(0,0,0,0.3)", border: "none" }}>
+                    <iframe
+                      title="Clock"
+                      frameBorder="0"
+                      allowFullScreen
+                      mozallowfullscreen="true"
+                      webkitallowfullscreen="true"
+                      allow="autoplay; fullscreen; xr-spatial-tracking"
+                      xr-spatial-tracking
+                      execution-while-out-of-viewport
+                      execution-while-not-rendered
+                      web-share
+                      style={{ width: "100%", height: "100%", border: "none" }}
+                      src="https://sketchfab.com/models/cd0e6a816e6942b587846dd1e866d59e/embed?autostart=1&transparent=1&ui_hint=0"
+                    />
+                  </div>
+                </div>
+
+                {/* Tire */}
+                <div style={{ flex: "0 0 auto", width: "100%", maxWidth: "450px" }}>
+                  <div className="sketchfab-embed-wrapper" style={{ height: "400px", borderRadius: "12px", overflow: "hidden", boxShadow: "0 0px 20px rgba(0,0,0,0.3)", border: "none" }}>
+                    <iframe
+                      title="[REMAKE] - Used studded tyre"
+                      frameBorder="0"
+                      allowFullScreen
+                      mozallowfullscreen="true"
+                      webkitallowfullscreen="true"
+                      allow="autoplay; fullscreen; xr-spatial-tracking"
+                      xr-spatial-tracking
+                      execution-while-out-of-viewport
+                      execution-while-not-rendered
+                      web-share
+                      style={{ width: "100%", height: "100%", border: "none" }}
+                      src="https://sketchfab.com/models/2e06879d56954f3b894e62b55d2ca7ef/embed?autostart=1&transparent=1"
+                    />
+                  </div>
                 </div>
               </div>
             </motion.div>
