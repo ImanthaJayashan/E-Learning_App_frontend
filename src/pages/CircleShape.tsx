@@ -3,6 +3,13 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { motion } from "framer-motion";
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import CardMedia from '@mui/material/CardMedia';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import CardActionArea from '@mui/material/CardActionArea';
+import CardActions from '@mui/material/CardActions';
 
 const CircleShape: React.FC = () => {
   const navigate = useNavigate();
@@ -592,36 +599,239 @@ const CircleShape: React.FC = () => {
             </div>
           </motion.div>
 
-          <h1 style={{ marginTop: 0, marginBottom: "0.5rem" }}>Circle</h1>
-          <p style={{ marginTop: 0, color: "#4b5563", lineHeight: 1.6, marginBottom: "2rem" }}>
-            Welcome to the Circle page. Learn about circles in a fun and interactive way!
-          </p>
-
-          {/* 3D Circle Test Button */}
+          {/* 3D Circle Thumbnail Card */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5 }}
-            style={{ textAlign: "center", marginBottom: "2rem" }}
+            style={{ 
+              textAlign: "center", 
+              marginBottom: "2rem", 
+              display: "flex", 
+              justifyContent: "center",
+              padding: "0 1rem"
+            }}
           >
-            <motion.button
-              onClick={() => setShow3DCircle(!show3DCircle)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              style={{
-                background: "linear-gradient(135deg, #FF6B6B, #FF8E53)",
-                color: "white",
-                border: "none",
-                borderRadius: "12px",
-                padding: "1rem 2.5rem",
-                fontSize: "1.3rem",
-                fontWeight: "bold",
-                cursor: "pointer",
-                boxShadow: "0 8px 20px rgba(255, 107, 107, 0.3)",
-              }}
-            >
-              {show3DCircle ? "Hide 3D Circle" : "🎯 Test 3D Circle"}
-            </motion.button>
+            <Card sx={{ 
+              width: "100%",
+              maxWidth: { xs: "100%", sm: 600, md: 800, lg: 900 },
+              boxShadow: 3,
+              position: "relative"
+            }}>
+              <CardActionArea onClick={() => setShow3DCircle(!show3DCircle)}>
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <CardMedia
+                    component="img"
+                    height="300"
+                    image="/webrotate-360-product-views-share.png"
+                    alt="3D Circular Objects"
+                    sx={{
+                      objectFit: "cover",
+                      position: "relative",
+                      height: { xs: 200, sm: 250, md: 300 }
+                    }}
+                  />
+                  
+                  {/* Animated overlay gradient */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    whileHover={{ opacity: 0.3 }}
+                    transition={{ duration: 0.3 }}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      background: "linear-gradient(135deg, rgba(102, 126, 234, 0.5) 0%, rgba(118, 75, 162, 0.5) 100%)",
+                      pointerEvents: "none"
+                    }}
+                  />
+                  
+                  {/* Animated particles effect */}
+                  <motion.div
+                    animate={{
+                      backgroundPosition: ["0% 0%", "100% 100%"],
+                    }}
+                    transition={{
+                      duration: 20,
+                      repeat: Infinity,
+                      repeatType: "reverse"
+                    }}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.3) 1px, transparent 1px)",
+                      backgroundSize: "50px 50px",
+                      pointerEvents: "none",
+                      opacity: 0.3
+                    }}
+                  />
+                </motion.div>
+                
+                {/* Status Badge Overlay */}
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.3, type: "spring" }}
+                  style={{
+                    position: "absolute",
+                    top: "1rem",
+                    right: "1rem",
+                    background: show3DCircle ? "rgba(76, 175, 80, 0.9)" : "rgba(255, 255, 255, 0.9)",
+                    color: show3DCircle ? "white" : "#667eea",
+                    padding: "0.5rem 1rem",
+                    borderRadius: "20px",
+                    fontSize: "0.85rem",
+                    fontWeight: "bold",
+                    backdropFilter: "blur(10px)",
+                    zIndex: 2,
+                    boxShadow: "0 4px 15px rgba(0,0,0,0.2)"
+                  }}
+                >
+                  {show3DCircle ? "✓ Open" : "Click to View"}
+                </motion.div>
+                
+                <CardContent sx={{ 
+                  background: "linear-gradient(135deg, #FFE5F1, #E0F4FF, #FFF4E0, #F0E7FF)",
+                  backgroundSize: "400% 400%",
+                  animation: "gradientShift 8s ease infinite",
+                  position: "relative",
+                  overflow: "hidden",
+                  minHeight: "200px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexDirection: "column",
+                  "@keyframes gradientShift": {
+                    "0%": { backgroundPosition: "0% 50%" },
+                    "50%": { backgroundPosition: "100% 50%" },
+                    "100%": { backgroundPosition: "0% 50%" }
+                  }
+                }}>
+                  {/* Main Text */}
+                  <motion.div
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ 
+                      scale: [1, 1.1, 1],
+                      opacity: 1,
+                      y: [0, -10, 0]
+                    }}
+                    transition={{ 
+                      duration: 2,
+                      repeat: Infinity,
+                      repeatType: "reverse"
+                    }}
+                    style={{
+                      position: "relative",
+                      zIndex: 10,
+                      textAlign: "center"
+                    }}
+                  >
+                    <Typography 
+                      sx={{ 
+                        fontSize: { xs: "2.5rem", sm: "3.5rem", md: "4.5rem" },
+                        fontFamily: "'Fredoka One', 'Baloo 2', 'Rounded Mplus 1c', sans-serif",
+                        fontWeight: "900",
+                          color: "#000000",
+                        letterSpacing: "2px",
+                        marginBottom: "0.5rem",
+                          filter: "drop-shadow(2px 2px 4px rgba(255,255,255,0.5))"
+                      }}
+                    >
+                      Play with Circles
+                    </Typography>
+                  </motion.div>
+
+                  {/* Floating bubbles animation */}
+                  <motion.div
+                    animate={{
+                      y: [-20, -40, -20],
+                      x: [0, 10, 0],
+                      scale: [1, 1.1, 1]
+                    }}
+                    transition={{
+                      duration: 4,
+                      repeat: Infinity,
+                      repeatType: "reverse"
+                    }}
+                    style={{
+                      position: "absolute",
+                      top: "10%",
+                      right: "10%",
+                      fontSize: "3rem",
+                      opacity: 0.3
+                    }}
+                  >
+                    ⭐
+                  </motion.div>
+                  
+                  <motion.div
+                    animate={{
+                      y: [-30, -10, -30],
+                      x: [0, -15, 0],
+                      rotate: [0, 360, 0]
+                    }}
+                    transition={{
+                      duration: 5,
+                      repeat: Infinity,
+                      repeatType: "reverse"
+                    }}
+                    style={{
+                      position: "absolute",
+                      bottom: "10%",
+                      left: "5%",
+                      fontSize: "2.5rem",
+                      opacity: 0.3
+                    }}
+                  >
+                    🌟
+                  </motion.div>
+                </CardContent>
+              </CardActionArea>
+              <CardActions sx={{ 
+                background: "linear-gradient(to top, #e8f5ff, #ffffff)",
+                justifyContent: "center",
+                padding: "1rem"
+              }}>
+                <motion.div 
+                  whileHover={{ scale: 1.1, rotate: 2 }} 
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <Button 
+                    size="large" 
+                    variant="contained"
+                    onClick={() => setShow3DCircle(!show3DCircle)}
+                    sx={{ 
+                      fontWeight: "900",
+                      fontFamily: "'Fredoka One', 'Baloo 2', 'Rounded Mplus 1c', sans-serif",
+                      fontSize: { xs: "1rem", sm: "1.2rem" },
+                      background: "linear-gradient(45deg, #6366F1, #22D3EE)",
+                      color: "white",
+                      textShadow: "2px 2px 4px rgba(0,0,0,0.3)",
+                      borderRadius: "25px",
+                      padding: "0.8rem 2rem",
+                      boxShadow: "0 4px 15px rgba(99, 102, 241, 0.4)",
+                      border: "3px solid white",
+                      textTransform: "uppercase",
+                      letterSpacing: "2px",
+                      '&:hover': {
+                        background: "linear-gradient(45deg, #22D3EE, #8B5CF6)",
+                        boxShadow: "0 6px 20px rgba(99, 102, 241, 0.6)",
+                      }
+                    }}
+                  >
+                    {show3DCircle ? "🚀 HIDE FUN!" : "🎮 LET'S PLAY!"}
+                  </Button>
+                </motion.div>
+              </CardActions>
+            </Card>
           </motion.div>
 
           {/* 3D Interactive Circle */}
@@ -703,9 +913,23 @@ const CircleShape: React.FC = () => {
             viewport={{ once: false, amount: 0.3 }}
             style={{ marginBottom: "2rem" }}
           >
-            <h2 style={{ color: "#FF6B6B", fontSize: "1.8rem", marginBottom: "1rem" }}>🔵 What is a Circle?</h2>
-            <p style={{ color: "#4b5563", lineHeight: 1.8, fontSize: "1.1rem" }}>
-              A circle is a round shape with no corners or edges. Every point on a circle is the same distance from the center!
+            <h2 style={{ 
+              color: "#FF6B6B", 
+              fontSize: "2.4rem", 
+              marginBottom: "1.2rem",
+              textAlign: "center",
+              letterSpacing: "1px",
+              fontWeight: 800
+            }}>🔵 What is a Circle?</h2>
+            <p style={{ 
+              color: "#4b5563", 
+              lineHeight: 1.8, 
+              fontSize: "1.3rem",
+              textAlign: "center",
+              maxWidth: "900px",
+              margin: "0 auto"
+            }}>
+              A circle is a round shape with no corners or edges. 
             </p>
           </motion.div>
 
@@ -716,20 +940,80 @@ const CircleShape: React.FC = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
             viewport={{ once: false, amount: 0.3 }}
             style={{ 
-              background: "linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%)",
-              borderRadius: "12px",
-              padding: "1.5rem",
-              marginBottom: "2rem"
+              background: "linear-gradient(135deg, #fff3d8 0%, #ffe5f1 100%)",
+              borderRadius: "16px",
+              padding: "1.75rem",
+              marginBottom: "2rem",
+              boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
+              border: "2px solid rgba(255, 214, 102, 0.5)"
             }}
           >
-            <h3 style={{ color: "#2d3436", marginTop: 0, fontSize: "1.5rem" }}>✨ Fun Facts About Circles!</h3>
-            <ul style={{ color: "#2d3436", lineHeight: 2, fontSize: "1.05rem" }}>
-              <li>🌕 The moon looks like a circle!</li>
-              <li>🍕 Pizza is usually circular</li>
-              <li>⚽ Balls are circles in every direction</li>
-              <li>🎯 Target boards have many circles</li>
-              <li>🌞 The sun appears as a circle in the sky</li>
-            </ul>
+            <h3 style={{ 
+              color: "#ff6b6b", 
+              marginTop: 0, 
+              fontSize: "1.9rem", 
+              textAlign: "center",
+              letterSpacing: "1px"
+            }}>✨ Fun Facts About Circles!</h3>
+
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+              gap: "0.75rem",
+              marginTop: "1rem"
+            }}>
+              {[{
+                icon: "🌕",
+                title: "Moon Magic",
+                text: "The moon looks like a perfect glowing circle!"
+              },{
+                icon: "🍕",
+                title: "Pizza Party",
+                text: "Pizzas are yummy circles you can share."
+              },{
+                icon: "⚽",
+                title: "Ball Bounce",
+                text: "Balls are circles from every direction."
+              },{
+                icon: "🎯",
+                title: "Target Time",
+                text: "Targets stack circles inside circles."
+              },{
+                icon: "🌞",
+                title: "Sunny Circle",
+                text: "The sun shines as a bright circle in the sky."
+              }].map((fact, idx) => (
+                <motion.div
+                  key={idx}
+                  whileHover={{ scale: 1.03, y: -3 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                  style={{
+                    background: "white",
+                    borderRadius: "12px",
+                    padding: "0.9rem 1rem",
+                    border: "2px dashed rgba(255, 214, 102, 0.6)",
+                    boxShadow: "0 6px 14px rgba(0,0,0,0.05)",
+                    display: "flex",
+                    gap: "0.75rem",
+                    alignItems: "center"
+                  }}
+                >
+                  <div style={{ fontSize: "1.8rem" }}>{fact.icon}</div>
+                  <div>
+                    <div style={{
+                      fontWeight: 800,
+                      color: "#ff6b6b",
+                      fontSize: "1.05rem"
+                    }}>{fact.title}</div>
+                    <div style={{
+                      color: "#4b5563",
+                      lineHeight: 1.5,
+                      fontSize: "0.98rem"
+                    }}>{fact.text}</div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </motion.div>
 
             {/* Preschool Circle Drawing Game */}
@@ -1191,29 +1475,6 @@ const CircleShape: React.FC = () => {
                   <p style={{ color: "#6c757d", margin: 0, fontSize: "0.9rem" }}>{activity.desc}</p>
                 </motion.div>
               ))}
-            </div>
-          </motion.div>
-
-          {/* Circle Properties */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
-            viewport={{ once: false, amount: 0.3 }}
-            style={{
-              background: "linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%)",
-              borderRadius: "12px",
-              padding: "1.5rem",
-              marginBottom: "2rem",
-              color: "white"
-            }}
-          >
-            <h3 style={{ marginTop: 0, fontSize: "1.5rem" }}>📐 Circle Parts</h3>
-            <div style={{ lineHeight: 2, fontSize: "1.05rem" }}>
-              <p><strong>Center:</strong> The middle point of the circle</p>
-              <p><strong>Radius:</strong> Distance from center to edge</p>
-              <p><strong>Diameter:</strong> Distance across through center</p>
-              <p><strong>Circumference:</strong> Distance around the circle</p>
             </div>
           </motion.div>
 
