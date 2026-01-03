@@ -1,244 +1,111 @@
-/* Minimal global styles */
-:root {
-	--bg: #fff;
-	--text: #111;
-	--nav-bg: #f8f9fc;
-	--nav-border: #e5e7eb;
-	--nav-text: #5a5a5a;
-	--brand-main: #66ad37;
-	--brand-accent: #df6b30;
-	--cta: #0c7c8c;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 48 100% 95%;
+    --foreground: 220 20% 20%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 20%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 20%;
+
+    --primary: 142 76% 56%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 45 100% 51%;
+    --secondary-foreground: 220 20% 20%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 200 98% 48%;
+    --accent-foreground: 0 0% 100%;
+
+    --success: 142 76% 56%;
+    --success-foreground: 0 0% 100%;
+
+    --error: 0 84% 60%;
+    --error-foreground: 0 0% 100%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 142 76% 56%;
+
+    --radius: 1.5rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
 }
 
-html, body, #root { height: 100%; }
-body { margin: 0; font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; background: var(--bg); color: var(--text); }
-main { padding: 1rem; }
+@layer base {
+  * {
+    @apply border-border;
+  }
 
-.navbar {
-	background: var(--nav-bg);
-	border-bottom: 1px solid var(--nav-border);
-	width: 100%;
-	padding: 0;
-}
-
-.navbar-inner {
-	width: 100%;
-	padding: 1.2rem 1.25rem;
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 1rem;
-	box-sizing: border-box;
-}
-
-.nav-brand {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.75rem;
-	text-decoration: none;
-}
-
-.nav-logo {
-	width: 78px;
-	height: auto;
-	display: block;
-}
-
-.brand-text {
-	display: inline-flex;
-	align-items: baseline;
-	gap: 0.25rem;
-	font-size: 1.8rem;
-	font-weight: 700;
-	letter-spacing: 0.01em;
-}
-
-.brand-main { color: var(--brand-main); }
-.brand-accent { color: var(--brand-accent); }
-
-.nav-right {
-	display: flex;
-	align-items: center;
-	gap: 1.25rem;
-}
-
-.nav-links {
-	list-style: none;
-	display: flex;
-	align-items: center;
-	gap: 1.75rem;
-	margin: 0;
-	padding: 0;
-}
-
-.nav-link {
-	text-decoration: none;
-	color: var(--nav-text);
-	font-weight: 700;
-	font-size: 1.05rem;
-}
-
-.nav-link:hover { color: #333; }
-
-.nav-cta {
-	background: var(--cta);
-	color: #fff;
-	border: none;
-	border-radius: 12px;
-	padding: 0.55rem 1.35rem;
-	font-weight: 700;
-	font-size: 1rem;
-	cursor: pointer;
-	box-shadow: 0 6px 14px rgba(12, 124, 140, 0.18);
-}
-
-.nav-cta:hover { filter: brightness(1.05); }
-
-@media (max-width: 900px) {
-	.navbar-inner { flex-wrap: wrap; }
-	.nav-right { width: 100%; justify-content: space-between; }
-	.nav-links { gap: 1rem; }
-}
-
-/* Footer Styles */
-.footer {
-	background: linear-gradient(135deg, #e8f4f8 0%, #f0f8f5 100%);
-	border-top: 3px solid var(--cta);
-	padding: 2.5rem 1.25rem;
-	margin-top: 3rem;
-}
-
-.footer-content {
-	max-width: 1180px;
-	margin: 0 auto;
-	display: grid;
-	grid-template-columns: 1fr 1.5fr 1fr;
-	gap: 2.5rem;
-}
-
-.footer-section { }
-
-.footer-left {
-	padding-right: 1rem;
-}
-
-.footer-logo {
-	width: 120px;
-	height: auto;
-	margin-bottom: 1rem;
-	display: block;
-}
-
-.footer-desc {
-	font-size: 0.95rem;
-	color: #666;
-	line-height: 1.5;
-	margin: 0.5rem 0;
-}
-
-.footer-copyright {
-	font-size: 0.85rem;
-	color: #888;
-	font-weight: 700;
-	margin-top: 1rem;
-}
-
-.footer-middle {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 1.5rem;
-}
-
-.footer-col { }
-
-.footer-heading {
-	color: var(--cta);
-	font-size: 1.05rem;
-	margin: 0 0 1rem 0;
-	font-weight: 700;
-}
-
-.footer-item {
-	display: flex;
-	align-items: flex-start;
-	gap: 0.75rem;
-	margin-bottom: 0.75rem;
-	font-size: 0.95rem;
-	color: #555;
-}
-
-.footer-icon {
-	font-size: 1.25rem;
-	flex-shrink: 0;
-}
-
-.footer-item p {
-	margin: 0;
-	line-height: 1.4;
-}
-
-.footer-links {
-	list-style: none;
-	margin: 0;
-	padding: 0;
-	display: flex;
-	flex-direction: column;
-	gap: 0.5rem;
-}
-
-.footer-link {
-	text-decoration: none;
-	color: #666;
-	font-size: 0.95rem;
-	transition: color 0.2s;
-}
-
-.footer-link:hover { color: var(--cta); }
-
-.footer-right {
-	text-align: center;
-}
-
-.footer-social-text {
-	font-size: 0.9rem;
-	color: #888;
-	margin-bottom: 1rem;
-}
-
-.footer-social {
-	display: flex;
-	justify-content: center;
-	gap: 1rem;
-}
-
-.social-icon {
-	width: 45px;
-	height: 45px;
-	border-radius: 50%;
-	background: #fff;
-	border: 2px solid #ddd;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	text-decoration: none;
-	font-weight: 700;
-	color: #555;
-	font-size: 1.2rem;
-	transition: all 0.2s;
-}
-
-.social-icon:hover {
-	background: var(--cta);
-	border-color: var(--cta);
-	color: #fff;
-}
-
-@media (max-width: 768px) {
-	.footer-content {
-		grid-template-columns: 1fr;
-		gap: 1.5rem;
-	}
-	.footer-middle {
-		grid-template-columns: 1fr;
-	}
+  body {
+    @apply bg-background text-foreground;
+  }
 }
