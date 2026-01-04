@@ -46,7 +46,7 @@ npm install
 
 ## Local development
 
-1. Install deps: `npm install`
+1. Install dependecies: `npm install`
 2. Start dev server: `npm run dev`
 3. Open the URL shown by Vite (usually http://localhost:5173)
 
