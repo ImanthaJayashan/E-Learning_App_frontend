@@ -70,7 +70,7 @@ const Home: React.FC = () => {
           <button
             type="button"
             aria-label="Dyslexia Reading and Speech Analysis"
-            onClick={() => handleClick("Dyslexia: Reading & Speech Analysis")}
+            onClick={() => navigate("/dyslexia-reading-speech")}
             style={buttonBase}
           >
             <strong>Dyslexia — Reading & Speech</strong>
