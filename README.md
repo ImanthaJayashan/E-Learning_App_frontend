@@ -24,6 +24,9 @@ npm install
 - `npm run build` — build production assets
 - `npm run preview` — locally preview production build
 
+## Architecture Diagram
+![alt text](<Architecture Diagram.png>)
+
 ## Project structure
 
 - index.html
