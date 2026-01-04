@@ -25,7 +25,8 @@ npm install
 - `npm run preview` — locally preview production build
 
 ## Architecture Diagram
-![alt text](<Architecture Diagram.png>)
+<img width="1536" height="1024" alt="Architecture Diagram" src="https://github.com/user-attachments/assets/8fef2eef-99d8-4f28-bf4d-923ac2014f6f" />
+
 
 ## Project structure
 
