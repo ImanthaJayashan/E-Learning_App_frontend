@@ -1,73 +1,54 @@
-# Welcome to your Lovable project
+Animal Sound Safari – Frontend
 
-## Project info
+Small React + Vite frontend for a preschool e-learning research project.
 
-**URL**: https://lovable.dev/projects/5fe1ad60-51f2-478c-bd77-ba7e37efb692
+Quick Overview
 
-## How can I edit this code?
+Stack: React, TypeScript, Vite, Tailwind CSS, shadcn-ui
 
-There are several ways of editing your application.
+Purpose: Interactive sound-based learning game for preschool children
 
-**Use Lovable**
+Focus: Animal sound recognition and learning behavior monitoring
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/5fe1ad60-51f2-478c-bd77-ba7e37efb692) and start prompting.
+Prerequisites
 
-Changes made via Lovable will be committed automatically to this repo.
+Node.js (16+ recommended)
 
-**Use your preferred IDE**
+npm
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+Install
+npm install
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Available Scripts
 
-Follow these steps:
+npm run dev — start development server
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+npm run build — build production assets
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+npm run preview — preview production build locally
 
-# Step 3: Install the necessary dependencies.
-npm i
+Features
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+Animal sound playback
 
-**Edit a file directly in GitHub**
+Tap-based interaction for children
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Multiple attempts with feedback (Correct / Try Again)
 
-**Use GitHub Codespaces**
+Simple and child-friendly UI design
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Project Structure
 
-## What technologies are used for this project?
+index.html
 
-This project is built with:
+src/
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+package.json
 
-## How can I deploy this project?
+vite.config.ts
 
-Simply open [Lovable](https://lovable.dev/projects/5fe1ad60-51f2-478c-bd77-ba7e37efb692) and click on Share -> Publish.
+tailwind.config.ts
 
-## Can I connect a custom domain to my Lovable project?
+Notes
 
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+This frontend is developed as part of an academic research project focused on adaptive and game-based learning for preschool children.
