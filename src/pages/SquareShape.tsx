@@ -9,8 +9,42 @@ const SquareShape: React.FC = () => {
   return (
     <div className="eye-page">
       <Navbar />
-      <main style={{ padding: "2rem 1rem", minHeight: "100vh" }}>
+      <main style={{ 
+        padding: "2rem 1rem", 
+        minHeight: "100vh",
+        backgroundImage: "url('/27189026_xp86_56i7_220412.svg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        willChange: "transform",
+        position: "relative",
+        overflow: "hidden"
+      }}>
         <style>{`
+          @keyframes driftBackground {
+            0%, 100% { transform: scale(1) translateY(0px); }
+            50% { transform: scale(1.05) translateY(-20px); }
+          }
+          @keyframes floatBackground {
+            0%, 100% { background-position: center center; }
+            50% { background-position: center calc(50% - 15px); }
+          }
+          main::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: inherit;
+            background-size: inherit;
+            background-position: inherit;
+            background-repeat: inherit;
+            animation: driftBackground 15s ease-in-out infinite;
+            z-index: 0;
+            opacity: 0.95;
+          }
+          main > * {
+            position: relative;
+            z-index: 1;
+          }
           @keyframes wiggleBackBtn {
             0%, 100% { transform: translateY(0) rotate(0deg); }
             25% { transform: translateY(-3px) rotate(-2deg); }
@@ -23,11 +57,13 @@ const SquareShape: React.FC = () => {
             width: "100%",
             maxWidth: "100%",
             margin: "0",
-            background: "#ffffff",
+            background: "rgba(255, 255, 255, 0.25)",
+            backdropFilter: "blur(5px)",
             borderRadius: "18px",
             padding: "2.5rem 2rem",
             boxShadow: "0 14px 32px rgba(0,0,0,0.12)",
-            border: "1px solid #eef2f7",
+            border: "1px solid rgba(238, 242, 247, 0.6)",
+            position: "relative"
           }}
         >
           <button
