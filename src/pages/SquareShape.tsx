@@ -51,53 +51,81 @@ const CircleShape: React.FC = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Redraw guide and animated demo circle
+    // Redraw guide and animated demo path
     drawGameGuide(ctx);
 
     if (demoProgress > 0) {
-      // Draw animated circle
-      const centerX = 375;
-      const centerY = 350;
-      const radius = 320;
-      const endAngle = (demoProgress / 100) * Math.PI * 2;
+      // Draw animated square perimeter path
+      const { centerX, centerY, halfSide } = getSquareParams();
+      const left = centerX - halfSide;
+      const right = centerX + halfSide;
+      const top = centerY - halfSide;
+      const bottom = centerY + halfSide;
+      const side = halfSide * 2;
+      const perimeter = side * 4;
+      let remaining = (demoProgress / 100) * perimeter;
 
+      // Start at top-left corner
+      let cx = left;
+      let cy = top;
       ctx.beginPath();
-      ctx.arc(centerX, centerY, radius, 0, endAngle);
-      ctx.strokeStyle = '#FFD700'; // Gold color for visibility
+      ctx.moveTo(cx, cy);
+
+      const drawEdge = (ex: number, ey: number) => {
+        const dx = ex - cx;
+        const dy = ey - cy;
+        const edgeLen = Math.hypot(dx, dy);
+        const segLen = Math.min(remaining, edgeLen);
+        const t = segLen / (edgeLen || 1);
+        const nx = cx + dx * t;
+        const ny = cy + dy * t;
+        ctx.lineTo(nx, ny);
+        remaining -= segLen;
+        // update current point
+        cx = nx; cy = ny;
+        return segLen === edgeLen; // true if edge fully consumed
+      };
+
+      // Traverse edges clockwise until remaining is exhausted
+      if (remaining > 0) drawEdge(right, top);     // top
+      if (remaining > 0) drawEdge(right, bottom);  // right
+      if (remaining > 0) drawEdge(left, bottom);   // bottom
+      if (remaining > 0) drawEdge(left, top);      // left
+
+      ctx.strokeStyle = '#FFD700';
       ctx.lineWidth = 14;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       ctx.stroke();
 
-      // Draw animated arrow at the end of the demo animation
-      const arrowAngle = endAngle;
-      const arrowX = centerX + Math.cos(arrowAngle) * radius;
-      const arrowY = centerY + Math.sin(arrowAngle) * radius;
-      const nextArrowAngle = arrowAngle + 0.3;
-      const nextArrowX = centerX + Math.cos(nextArrowAngle) * radius;
-      const nextArrowY = centerY + Math.sin(nextArrowAngle) * radius;
+      // Draw arrow indicating direction
+      // Compute small forward step along current edge for arrow orientation
+      let ax = cx, ay = cy, bx = cx, by = cy;
+      if (cy === top && cx < right) { bx = Math.min(cx + 20, right); by = top; }
+      else if (cx === right && cy < bottom) { bx = right; by = Math.min(cy + 20, bottom); }
+      else if (cy === bottom && cx > left) { bx = Math.max(cx - 20, left); by = bottom; }
+      else if (cx === left && cy > top) { bx = left; by = Math.max(cy - 20, top); }
 
-      // Animated arrow head - larger and more visible
+      const dirX = bx - ax;
+      const dirY = by - ay;
+      const dirLen = Math.hypot(dirX, dirY) || 1;
+      const ux = dirX / dirLen;
+      const uy = dirY / dirLen;
+      const tipX = ax + ux * 24;
+      const tipY = ay + uy * 24;
+
       ctx.strokeStyle = '#FF6347';
       ctx.fillStyle = '#FF6347';
       ctx.lineWidth = 4;
-      
       ctx.beginPath();
-      ctx.moveTo(arrowX, arrowY);
-      ctx.lineTo(nextArrowX, nextArrowY);
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(tipX, tipY);
       ctx.stroke();
-
       const headlen = 25;
-      const dirX = nextArrowX - arrowX;
-      const dirY = nextArrowY - arrowY;
-      const dirLen = Math.sqrt(dirX * dirX + dirY * dirY);
-      const ux = dirX / dirLen;
-      const uy = dirY / dirLen;
-
       ctx.beginPath();
-      ctx.moveTo(nextArrowX, nextArrowY);
-      ctx.lineTo(nextArrowX - ux * headlen - uy * 12, nextArrowY - uy * headlen + ux * 12);
-      ctx.lineTo(nextArrowX - ux * headlen + uy * 12, nextArrowY - uy * headlen - ux * 12);
+      ctx.moveTo(tipX, tipY);
+      ctx.lineTo(tipX - ux * headlen - uy * 12, tipY - uy * headlen + ux * 12);
+      ctx.lineTo(tipX - ux * headlen + uy * 12, tipY - uy * headlen - ux * 12);
       ctx.closePath();
       ctx.fill();
     }
@@ -156,13 +184,63 @@ const CircleShape: React.FC = () => {
     redrawGamePath(ctx);
   }, [gameDrawnPoints, gameFeedback]);
 
+  // Helper: square parameters
+  const getSquareParams = () => {
+    const centerX = 375;
+    const centerY = 350;
+    const halfSide = 320; // match circle radius coverage
+    return { centerX, centerY, halfSide };
+  };
+
+  // Helper: distance and closest point on square perimeter
+  const distanceAndClosestPointToSquare = (px: number, py: number) => {
+    const { centerX, centerY, halfSide } = getSquareParams();
+    const left = centerX - halfSide;
+    const right = centerX + halfSide;
+    const top = centerY - halfSide;
+    const bottom = centerY + halfSide;
+
+    const segments: Array<[number, number, number, number]> = [
+      [left, top, right, top], // top
+      [right, top, right, bottom], // right
+      [right, bottom, left, bottom], // bottom
+      [left, bottom, left, top], // left
+    ];
+
+    let minDist = Infinity;
+    let qx = px;
+    let qy = py;
+
+    for (const [x1, y1, x2, y2] of segments) {
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const len2 = dx * dx + dy * dy;
+      const t = Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / len2));
+      const cx = x1 + t * dx;
+      const cy = y1 + t * dy;
+      const dist = Math.hypot(px - cx, py - cy);
+      if (dist < minDist) {
+        minDist = dist;
+        qx = cx;
+        qy = cy;
+      }
+    }
+
+    return { dist: minDist, qx, qy };
+  };
+
   const drawGameGuide = (ctx: CanvasRenderingContext2D) => {
     // Clear canvas
     ctx.clearRect(0, 0, 750, 900);
-    
-    // Draw soft blue circle guide (thick and smooth)
+
+    // Draw soft blue square guide
+    const { centerX, centerY, halfSide } = getSquareParams();
+    const left = centerX - halfSide;
+    const top = centerY - halfSide;
+    const side = halfSide * 2;
+
     ctx.beginPath();
-    ctx.arc(375, 350, 320, 0, Math.PI * 2);
+    ctx.rect(left, top, side, side);
     ctx.strokeStyle = '#87CEEB'; // Soft sky blue
     ctx.lineWidth = 8;
     ctx.lineCap = 'round';
@@ -170,60 +248,53 @@ const CircleShape: React.FC = () => {
     ctx.stroke();
     ctx.globalAlpha = 1;
 
-    // Draw center point (very gentle)
-    ctx.beginPath();
-    ctx.arc(375, 350, 6, 0, Math.PI * 2);
+    // Center marker (small square)
     ctx.fillStyle = '#B0E0E6';
-    ctx.fill();
+    ctx.fillRect(centerX - 6, centerY - 6, 12, 12);
 
-    // Draw direction arrows around the circle
+    // Draw direction arrows along the square
     drawArrowGuides(ctx);
   };
 
   const drawArrowGuides = (ctx: CanvasRenderingContext2D) => {
-    const centerX = 375;
-    const centerY = 350;
-    const radius = 320;
-    const arrowCount = 8; // 8 arrows around the circle
+    const { centerX, centerY, halfSide } = getSquareParams();
+    const left = centerX - halfSide;
+    const right = centerX + halfSide;
+    const top = centerY - halfSide;
+    const bottom = centerY + halfSide;
 
-    for (let i = 0; i < arrowCount; i++) {
-      const angle = (i / arrowCount) * Math.PI * 2;
-      const nextAngle = ((i + 0.3) / arrowCount) * Math.PI * 2;
+    const positions = [0.15, 0.5, 0.85]; // along each edge
+    const drawArrow = (x: number, y: number, dx: number, dy: number) => {
+      const len = Math.hypot(dx, dy) || 1;
+      const ux = dx / len;
+      const uy = dy / len;
+      const tipX = x + ux * 24;
+      const tipY = y + uy * 24;
 
-      // Arrow position on circle
-      const x = centerX + Math.cos(angle) * radius;
-      const y = centerY + Math.sin(angle) * radius;
-
-      // Arrow tip position (slightly ahead)
-      const tipX = centerX + Math.cos(nextAngle) * radius;
-      const tipY = centerY + Math.sin(nextAngle) * radius;
-
-      // Draw arrow
       ctx.strokeStyle = 'rgba(255, 165, 0, 0.6)';
       ctx.fillStyle = 'rgba(255, 165, 0, 0.6)';
       ctx.lineWidth = 2;
-
-      // Arrow line
       ctx.beginPath();
       ctx.moveTo(x, y);
       ctx.lineTo(tipX, tipY);
       ctx.stroke();
-
-      // Arrow head
-      const headlen = 15;
-      const dirX = tipX - x;
-      const dirY = tipY - y;
-      const dirLen = Math.sqrt(dirX * dirX + dirY * dirY);
-      const ux = dirX / dirLen;
-      const uy = dirY / dirLen;
-
+      const headlen = 12;
       ctx.beginPath();
       ctx.moveTo(tipX, tipY);
-      ctx.lineTo(tipX - ux * headlen - uy * 8, tipY - uy * headlen + ux * 8);
-      ctx.lineTo(tipX - ux * headlen + uy * 8, tipY - uy * headlen - ux * 8);
+      ctx.lineTo(tipX - ux * headlen - uy * 6, tipY - uy * headlen + ux * 6);
+      ctx.lineTo(tipX - ux * headlen + uy * 6, tipY - uy * headlen - ux * 6);
       ctx.closePath();
       ctx.fill();
-    }
+    };
+
+    // top edge left->right
+    positions.forEach(p => drawArrow(left + (right - left) * p, top, 1, 0));
+    // right edge top->bottom
+    positions.forEach(p => drawArrow(right, top + (bottom - top) * p, 0, 1));
+    // bottom edge right->left
+    positions.forEach(p => drawArrow(right - (right - left) * p, bottom, -1, 0));
+    // left edge bottom->top
+    positions.forEach(p => drawArrow(left, bottom - (bottom - top) * p, 0, -1));
   };
 
   const redrawGamePath = (ctx: CanvasRenderingContext2D) => {
@@ -289,22 +360,12 @@ const CircleShape: React.FC = () => {
     let x = (clientX - rect.left) * scaleX;
     let y = (clientY - rect.top) * scaleY;
 
-    // Magnetic snap to circle guide (always enabled)
-    const centerX = 375;
-    const centerY = 350;
-    const targetRadius = 320;
-    const magnetStrength = 60; // Distance within which magnet activates
-
-    // Calculate distance from center
-    const dx = x - centerX;
-    const dy = y - centerY;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-
-    // If within magnetic range, snap to circle
-    if (Math.abs(distance - targetRadius) <= magnetStrength) {
-      const angle = Math.atan2(dy, dx);
-      x = centerX + Math.cos(angle) * targetRadius;
-      y = centerY + Math.sin(angle) * targetRadius;
+    // Magnetic snap to square perimeter (always enabled)
+    const magnetStrength = 60; // snap distance
+    const nearest = distanceAndClosestPointToSquare(x, y);
+    if (nearest.dist <= magnetStrength) {
+      x = nearest.qx;
+      y = nearest.qy;
     }
 
     setGameDrawnPoints(prev => [...prev, {x, y}]);
@@ -326,24 +387,18 @@ const CircleShape: React.FC = () => {
       return;
     }
 
-    const centerX = 375;
-    const centerY = 350;
-    const targetRadius = 320;
-    const tolerance = 60; // Generous tolerance for preschoolers
+    const tolerance = 60; // generous tolerance
 
-    let pointsNearCircle = 0;
+    let pointsNearSquare = 0;
     
     gameDrawnPoints.forEach(point => {
-      const distance = Math.sqrt(
-        Math.pow(point.x - centerX, 2) + Math.pow(point.y - centerY, 2)
-      );
-      
-      if (Math.abs(distance - targetRadius) <= tolerance) {
-        pointsNearCircle++;
+      const { dist } = distanceAndClosestPointToSquare(point.x, point.y);
+      if (dist <= tolerance) {
+        pointsNearSquare++;
       }
     });
 
-    const accuracy = pointsNearCircle / gameDrawnPoints.length;
+    const accuracy = pointsNearSquare / gameDrawnPoints.length;
 
     if (accuracy >= 0.6) { // 60% accuracy is great for preschoolers
       setGameFeedback('success');
@@ -745,7 +800,7 @@ const CircleShape: React.FC = () => {
                           filter: "drop-shadow(2px 2px 4px rgba(255,255,255,0.5))"
                       }}
                     >
-                      Play with Circles
+                      Play with Squares
                     </Typography>
                   </motion.div>
 
@@ -1017,7 +1072,7 @@ const CircleShape: React.FC = () => {
             </div>
           </motion.div>
 
-            {/* Preschool Circle Drawing Game */}
+            {/* Preschool Square Drawing Game */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -1120,7 +1175,7 @@ const CircleShape: React.FC = () => {
                   fontWeight: "bold"
                 }}
               >
-                🌟 Circle Drawing Game! 🌟
+                🟥 Square Drawing Game! 🌟
               </motion.h3>
 
               <motion.p 
@@ -1134,7 +1189,7 @@ const CircleShape: React.FC = () => {
                   fontWeight: "500"
                 }}
               >
-                Draw around the blue circle! 🎯
+                Trace along the blue square! 🎯
               </motion.p>
 
               <div style={{
@@ -1449,10 +1504,10 @@ const CircleShape: React.FC = () => {
               gap: "1rem"
             }}>
               {[
-                { emoji: "✏️", title: "Draw Circles", desc: "Practice drawing perfect circles" },
-                { emoji: "🔍", title: "Find Circles", desc: "Look for circles around you" },
-                { emoji: "🎭", title: "Circle Art", desc: "Create art using circles" },
-                { emoji: "🧩", title: "Circle Puzzles", desc: "Solve circle-based puzzles" }
+                { emoji: "✏️", title: "Draw Squares", desc: "Practice drawing perfect squares" },
+                { emoji: "🔍", title: "Find Squares", desc: "Look for squares around you" },
+                { emoji: "🎭", title: "Square Art", desc: "Create art using squares" },
+                { emoji: "🧩", title: "Square Puzzles", desc: "Solve square-based puzzles" }
               ].map((activity, index) => (
                 <motion.div
                   key={activity.title}
@@ -1493,9 +1548,9 @@ const CircleShape: React.FC = () => {
               marginTop: "2rem"
             }}
           >
-            <h3 style={{ fontSize: "2rem", margin: 0, color: "#2d3142" }}>🌟 Great Job Learning About Circles! 🌟</h3>
+            <h3 style={{ fontSize: "2rem", margin: 0, color: "#2d3142" }}>🌟 Great Job Learning About Squares! 🌟</h3>
             <p style={{ fontSize: "1.2rem", color: "#2d3142", marginTop: "1rem" }}>
-              Keep exploring and have fun with circles!
+              Keep exploring and have fun with squares!
             </p>
           </motion.div>
         </section>
