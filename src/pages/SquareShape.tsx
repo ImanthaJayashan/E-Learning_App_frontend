@@ -434,7 +434,7 @@ const CircleShape: React.FC = () => {
       <main style={{ 
         padding: "2rem 1rem", 
         minHeight: "100vh",
-        backgroundImage: "url('/27189026_xp86_56i7_220412.svg')",
+        backgroundImage: "url('/22400410_rainbow_sky_2605.svg')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
