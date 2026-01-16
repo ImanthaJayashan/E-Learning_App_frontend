@@ -879,7 +879,7 @@ const CircleShape: React.FC = () => {
                           filter: "drop-shadow(2px 2px 4px rgba(255,255,255,0.5))"
                       }}
                     >
-                      Play with Squares
+                      Play with Triangle 
                     </Typography>
                   </motion.div>
 
