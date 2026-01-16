@@ -4,7 +4,7 @@ import Home from "./pages/Home";
 import EyeProblemDetector from "./pages/EyeProblemDetector";
 import CircleShape from "./pages/CircleShape";
 import SquareShape from "./pages/SquareShape";
-import TriangleShape from "./pages/TriangleShape";
+import TriangleShape from "./pages/TriangleShape_new";
 import StarShape from "./pages/StarShape";
 
 const App: React.FC = () => (

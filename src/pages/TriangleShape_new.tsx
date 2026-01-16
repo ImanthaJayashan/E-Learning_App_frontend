@@ -55,19 +55,28 @@ const CircleShape: React.FC = () => {
     drawGameGuide(ctx);
 
     if (demoProgress > 0) {
-      // Draw animated square perimeter path
-      const { centerX, centerY, halfSide } = getSquareParams();
-      const left = centerX - halfSide;
-      const right = centerX + halfSide;
-      const top = centerY - halfSide;
-      const bottom = centerY + halfSide;
-      const side = halfSide * 2;
-      const perimeter = side * 4;
+      // Draw animated triangle perimeter path
+      const { centerX, centerY, radius } = getTriangleParams();
+      
+      // Triangle vertices (pointing up)
+      const angle1 = -Math.PI / 2; // top
+      const angle2 = -Math.PI / 2 + (2 * Math.PI / 3); // bottom right
+      const angle3 = -Math.PI / 2 + (4 * Math.PI / 3); // bottom left
+      
+      const x1 = centerX + radius * Math.cos(angle1);
+      const y1 = centerY + radius * Math.sin(angle1);
+      const x2 = centerX + radius * Math.cos(angle2);
+      const y2 = centerY + radius * Math.sin(angle2);
+      const x3 = centerX + radius * Math.cos(angle3);
+      const y3 = centerY + radius * Math.sin(angle3);
+      
+      const side = Math.hypot(x2 - x1, y2 - y1);
+      const perimeter = side * 3;
       let remaining = (demoProgress / 100) * perimeter;
 
-      // Start at top-left corner
-      let cx = left;
-      let cy = top;
+      // Start at top vertex
+      let cx = x1;
+      let cy = y1;
       ctx.beginPath();
       ctx.moveTo(cx, cy);
 
@@ -87,10 +96,9 @@ const CircleShape: React.FC = () => {
       };
 
       // Traverse edges clockwise until remaining is exhausted
-      if (remaining > 0) drawEdge(right, top);     // top
-      if (remaining > 0) drawEdge(right, bottom);  // right
-      if (remaining > 0) drawEdge(left, bottom);   // bottom
-      if (remaining > 0) drawEdge(left, top);      // left
+      if (remaining > 0) drawEdge(x2, y2);     // top to bottom-right
+      if (remaining > 0) drawEdge(x3, y3);     // bottom-right to bottom-left
+      if (remaining > 0) drawEdge(x1, y1);     // bottom-left to top
 
       ctx.strokeStyle = '#FFD700';
       ctx.lineWidth = 14;
@@ -99,12 +107,54 @@ const CircleShape: React.FC = () => {
       ctx.stroke();
 
       // Draw arrow indicating direction
-      // Compute small forward step along current edge for arrow orientation
       let ax = cx, ay = cy, bx = cx, by = cy;
-      if (cy === top && cx < right) { bx = Math.min(cx + 20, right); by = top; }
-      else if (cx === right && cy < bottom) { bx = right; by = Math.min(cy + 20, bottom); }
-      else if (cy === bottom && cx > left) { bx = Math.max(cx - 20, left); by = bottom; }
-      else if (cx === left && cy > top) { bx = left; by = Math.max(cy - 20, top); }
+      const forwardDist = 20;
+      
+      // Determine which edge we're on and get forward direction
+      if (Math.hypot(cx - x1, cy - y1) < 5) {
+        // Near vertex 1, going to vertex 2
+        const dx = x2 - x1, dy = y2 - y1;
+        const len = Math.hypot(dx, dy) || 1;
+        bx = cx + (dx / len) * forwardDist;
+        by = cy + (dy / len) * forwardDist;
+      } else if (Math.hypot(cx - x2, cy - y2) < 5) {
+        // Near vertex 2, going to vertex 3
+        const dx = x3 - x2, dy = y3 - y2;
+        const len = Math.hypot(dx, dy) || 1;
+        bx = cx + (dx / len) * forwardDist;
+        by = cy + (dy / len) * forwardDist;
+      } else if (Math.hypot(cx - x3, cy - y3) < 5) {
+        // Near vertex 3, going to vertex 1
+        const dx = x1 - x3, dy = y1 - y3;
+        const len = Math.hypot(dx, dy) || 1;
+        bx = cx + (dx / len) * forwardDist;
+        by = cy + (dy / len) * forwardDist;
+      } else {
+        // On an edge, determine which one and get direction
+        const d1 = Math.hypot(cx - x1, cy - y1);
+        const d2 = Math.hypot(cx - x2, cy - y2);
+        const d3 = Math.hypot(cx - x3, cy - y3);
+        
+        if (d1 < d2 && d1 < d3) {
+          // Closer to edge 1-2
+          const dx = x2 - x1, dy = y2 - y1;
+          const len = Math.hypot(dx, dy) || 1;
+          bx = cx + (dx / len) * forwardDist;
+          by = cy + (dy / len) * forwardDist;
+        } else if (d2 < d3) {
+          // Closer to edge 2-3
+          const dx = x3 - x2, dy = y3 - y2;
+          const len = Math.hypot(dx, dy) || 1;
+          bx = cx + (dx / len) * forwardDist;
+          by = cy + (dy / len) * forwardDist;
+        } else {
+          // Closer to edge 3-1
+          const dx = x1 - x3, dy = y1 - y3;
+          const len = Math.hypot(dx, dy) || 1;
+          bx = cx + (dx / len) * forwardDist;
+          by = cy + (dy / len) * forwardDist;
+        }
+      }
 
       const dirX = bx - ax;
       const dirY = by - ay;
@@ -184,40 +234,47 @@ const CircleShape: React.FC = () => {
     redrawGamePath(ctx);
   }, [gameDrawnPoints, gameFeedback]);
 
-  // Helper: square parameters
-  const getSquareParams = () => {
+  // Helper: triangle parameters
+  const getTriangleParams = () => {
     const centerX = 375;
-    const centerY = 350;
-    const halfSide = 320; // match circle radius coverage
-    return { centerX, centerY, halfSide };
+    const centerY = 320;
+    const radius = 280; // circumradius
+    return { centerX, centerY, radius };
   };
 
-  // Helper: distance and closest point on square perimeter
-  const distanceAndClosestPointToSquare = (px: number, py: number) => {
-    const { centerX, centerY, halfSide } = getSquareParams();
-    const left = centerX - halfSide;
-    const right = centerX + halfSide;
-    const top = centerY - halfSide;
-    const bottom = centerY + halfSide;
+  // Helper: distance and closest point on triangle perimeter
+  const distanceAndClosestPointToTriangle = (px: number, py: number) => {
+    const { centerX, centerY, radius } = getTriangleParams();
+    
+    // Triangle vertices (pointing up)
+    const angle1 = -Math.PI / 2; // top
+    const angle2 = -Math.PI / 2 + (2 * Math.PI / 3); // bottom right
+    const angle3 = -Math.PI / 2 + (4 * Math.PI / 3); // bottom left
+    
+    const x1 = centerX + radius * Math.cos(angle1);
+    const y1 = centerY + radius * Math.sin(angle1);
+    const x2 = centerX + radius * Math.cos(angle2);
+    const y2 = centerY + radius * Math.sin(angle2);
+    const x3 = centerX + radius * Math.cos(angle3);
+    const y3 = centerY + radius * Math.sin(angle3);
 
     const segments: Array<[number, number, number, number]> = [
-      [left, top, right, top], // top
-      [right, top, right, bottom], // right
-      [right, bottom, left, bottom], // bottom
-      [left, bottom, left, top], // left
+      [x1, y1, x2, y2], // top to bottom-right
+      [x2, y2, x3, y3], // bottom-right to bottom-left
+      [x3, y3, x1, y1], // bottom-left to top
     ];
 
     let minDist = Infinity;
     let qx = px;
     let qy = py;
 
-    for (const [x1, y1, x2, y2] of segments) {
-      const dx = x2 - x1;
-      const dy = y2 - y1;
+    for (const [sx1, sy1, sx2, sy2] of segments) {
+      const dx = sx2 - sx1;
+      const dy = sy2 - sy1;
       const len2 = dx * dx + dy * dy;
-      const t = Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / len2));
-      const cx = x1 + t * dx;
-      const cy = y1 + t * dy;
+      const t = Math.max(0, Math.min(1, ((px - sx1) * dx + (py - sy1) * dy) / len2));
+      const cx = sx1 + t * dx;
+      const cy = sy1 + t * dy;
       const dist = Math.hypot(px - cx, py - cy);
       if (dist < minDist) {
         minDist = dist;
@@ -233,35 +290,58 @@ const CircleShape: React.FC = () => {
     // Clear canvas
     ctx.clearRect(0, 0, 750, 900);
 
-    // Draw soft blue square guide
-    const { centerX, centerY, halfSide } = getSquareParams();
-    const left = centerX - halfSide;
-    const top = centerY - halfSide;
-    const side = halfSide * 2;
+    // Draw soft blue triangle guide
+    const { centerX, centerY, radius } = getTriangleParams();
+    
+    // Triangle vertices (pointing up)
+    const angle1 = -Math.PI / 2; // top
+    const angle2 = -Math.PI / 2 + (2 * Math.PI / 3); // bottom right
+    const angle3 = -Math.PI / 2 + (4 * Math.PI / 3); // bottom left
+    
+    const x1 = centerX + radius * Math.cos(angle1);
+    const y1 = centerY + radius * Math.sin(angle1);
+    const x2 = centerX + radius * Math.cos(angle2);
+    const y2 = centerY + radius * Math.sin(angle2);
+    const x3 = centerX + radius * Math.cos(angle3);
+    const y3 = centerY + radius * Math.sin(angle3);
 
     ctx.beginPath();
-    ctx.rect(left, top, side, side);
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.lineTo(x3, y3);
+    ctx.closePath();
     ctx.strokeStyle = '#87CEEB'; // Soft sky blue
     ctx.lineWidth = 8;
     ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
     ctx.globalAlpha = 0.7;
     ctx.stroke();
     ctx.globalAlpha = 1;
 
-    // Center marker (small square)
+    // Center marker (small circle)
     ctx.fillStyle = '#B0E0E6';
-    ctx.fillRect(centerX - 6, centerY - 6, 12, 12);
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 6, 0, 2 * Math.PI);
+    ctx.fill();
 
-    // Draw direction arrows along the square
+    // Draw direction arrows along the triangle
     drawArrowGuides(ctx);
   };
 
   const drawArrowGuides = (ctx: CanvasRenderingContext2D) => {
-    const { centerX, centerY, halfSide } = getSquareParams();
-    const left = centerX - halfSide;
-    const right = centerX + halfSide;
-    const top = centerY - halfSide;
-    const bottom = centerY + halfSide;
+    const { centerX, centerY, radius } = getTriangleParams();
+    
+    // Triangle vertices (pointing up)
+    const angle1 = -Math.PI / 2; // top
+    const angle2 = -Math.PI / 2 + (2 * Math.PI / 3); // bottom right
+    const angle3 = -Math.PI / 2 + (4 * Math.PI / 3); // bottom left
+    
+    const x1 = centerX + radius * Math.cos(angle1);
+    const y1 = centerY + radius * Math.sin(angle1);
+    const x2 = centerX + radius * Math.cos(angle2);
+    const y2 = centerY + radius * Math.sin(angle2);
+    const x3 = centerX + radius * Math.cos(angle3);
+    const y3 = centerY + radius * Math.sin(angle3);
 
     const positions = [0.15, 0.5, 0.85]; // along each edge
     const drawArrow = (x: number, y: number, dx: number, dy: number) => {
@@ -287,14 +367,13 @@ const CircleShape: React.FC = () => {
       ctx.fill();
     };
 
-    // top edge left->right
-    positions.forEach(p => drawArrow(left + (right - left) * p, top, 1, 0));
-    // right edge top->bottom
-    positions.forEach(p => drawArrow(right, top + (bottom - top) * p, 0, 1));
-    // bottom edge right->left
-    positions.forEach(p => drawArrow(right - (right - left) * p, bottom, -1, 0));
-    // left edge bottom->top
-    positions.forEach(p => drawArrow(left, bottom - (bottom - top) * p, 0, -1));
+    // Draw arrows along each side of the triangle
+    // top to bottom-right
+    positions.forEach(p => drawArrow(x1 + (x2 - x1) * p, y1 + (y2 - y1) * p, x2 - x1, y2 - y1));
+    // bottom-right to bottom-left
+    positions.forEach(p => drawArrow(x2 + (x3 - x2) * p, y2 + (y3 - y2) * p, x3 - x2, y3 - y2));
+    // bottom-left to top
+    positions.forEach(p => drawArrow(x3 + (x1 - x3) * p, y3 + (y1 - y3) * p, x1 - x3, y1 - y3));
   };
 
   const redrawGamePath = (ctx: CanvasRenderingContext2D) => {
@@ -360,9 +439,9 @@ const CircleShape: React.FC = () => {
     let x = (clientX - rect.left) * scaleX;
     let y = (clientY - rect.top) * scaleY;
 
-    // Magnetic snap to square perimeter (always enabled)
+    // Magnetic snap to triangle perimeter (always enabled)
     const magnetStrength = 60; // snap distance
-    const nearest = distanceAndClosestPointToSquare(x, y);
+    const nearest = distanceAndClosestPointToTriangle(x, y);
     if (nearest.dist <= magnetStrength) {
       x = nearest.qx;
       y = nearest.qy;
@@ -389,16 +468,16 @@ const CircleShape: React.FC = () => {
 
     const tolerance = 60; // generous tolerance
 
-    let pointsNearSquare = 0;
+    let pointsNearTriangle = 0;
     
     gameDrawnPoints.forEach(point => {
-      const { dist } = distanceAndClosestPointToSquare(point.x, point.y);
+      const { dist } = distanceAndClosestPointToTriangle(point.x, point.y);
       if (dist <= tolerance) {
-        pointsNearSquare++;
+        pointsNearTriangle++;
       }
     });
 
-    const accuracy = pointsNearSquare / gameDrawnPoints.length;
+    const accuracy = pointsNearTriangle / gameDrawnPoints.length;
 
     if (accuracy >= 0.6) { // 60% accuracy is great for preschoolers
       setGameFeedback('success');
@@ -434,7 +513,7 @@ const CircleShape: React.FC = () => {
       <main style={{ 
         padding: "2rem 1rem", 
         minHeight: "100vh",
-        backgroundImage: "url('/11575245_51548.svg')",
+        backgroundImage: "url('/21849967_xn7d_2fzy_210914.svg')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
@@ -604,8 +683,8 @@ const CircleShape: React.FC = () => {
             }}
           >
             <img 
-              src="/square-1-14-2026 (1).gif" 
-              alt="Circle Animation" 
+              src="/Triangle-1-16-2026.gif" 
+              alt="Triangle Animation" 
               style={{
                 maxWidth: "500px",
                 width: "100%",
@@ -638,7 +717,7 @@ const CircleShape: React.FC = () => {
               }}
             >
               <iframe
-                src="https://www.youtube.com/embed/jlzX8jt0Now?start=62&end=107"
+                src="https://www.youtube.com/embed/jlzX8jt0Now?start=108&end=151"
                 title="Circle Learning Video"
                 style={{
                   position: "absolute",
@@ -916,44 +995,44 @@ const CircleShape: React.FC = () => {
               
               {/* 3D Models in a row */}
               <div style={{ display: "flex", gap: "2rem", alignItems: "center", justifyContent: "center", marginBottom: "1.5rem", flexWrap: "wrap" }}>
-                {/* LowPoly Box */}
+                {/* Pyramid */}
                 <div style={{ flex: "0 0 auto", width: "100%", maxWidth: "450px" }}>
                   <div className="sketchfab-embed-wrapper" style={{ height: "400px", borderRadius: "12px", overflow: "hidden", boxShadow: "0 0px 20px rgba(0,0,0,0.3)", border: "none" }}>
                     <iframe
-                      title="LowPoly Box"
+                      title="Pyramid"
                       frameBorder="0"
                       allowFullScreen
                       allow="autoplay; fullscreen; xr-spatial-tracking"
                       style={{ width: "100%", height: "100%", border: "none" }}
-                      src="https://sketchfab.com/models/e678f44da4b54165839c0fb825b70c44/embed?autostart=1&transparent=1"
+                      src="https://sketchfab.com/models/b47c6d297832428faee5c28a874949b7/embed?autostart=1&transparent=1"
                     />
                   </div>
                 </div>
 
-                {/* Dice */}
+                {/* Slice Of Pizza */}
                 <div style={{ flex: "0 0 auto", width: "100%", maxWidth: "450px" }}>
                   <div className="sketchfab-embed-wrapper" style={{ height: "400px", borderRadius: "12px", overflow: "hidden", boxShadow: "0 0px 20px rgba(0,0,0,0.3)", border: "none" }}>
                     <iframe
-                      title="Dice"
+                      title="Slice Of Pizza"
                       frameBorder="0"
                       allowFullScreen
                       allow="autoplay; fullscreen; xr-spatial-tracking"
                       style={{ width: "100%", height: "100%", border: "none" }}
-                      src="https://sketchfab.com/models/48979fb08afc4ad8a3dd17a07c2879c9/embed?autostart=1&transparent=1"
+                      src="https://sketchfab.com/models/b8c251d79e104922bc0497a5d2fdf822/embed?autostart=1&transparent=1"
                     />
                   </div>
                 </div>
 
-                {/* Slice of bread */}
+                {/* Waffle cone Ice cream */}
                 <div style={{ flex: "0 0 auto", width: "100%", maxWidth: "450px" }}>
                   <div className="sketchfab-embed-wrapper" style={{ height: "400px", borderRadius: "12px", overflow: "hidden", boxShadow: "0 0px 20px rgba(0,0,0,0.3)", border: "none" }}>
                     <iframe
-                      title="Slice of bread"
+                      title="Waffle cone Ice cream"
                       frameBorder="0"
                       allowFullScreen
                       allow="autoplay; fullscreen; xr-spatial-tracking"
                       style={{ width: "100%", height: "100%", border: "none" }}
-                      src="https://sketchfab.com/models/02553880d9f14609bec1c69ba0ad7450/embed?autostart=1&transparent=1"
+                      src="https://sketchfab.com/models/9c750090cc6f4d5dac3e4ea2b20797cc/embed?autostart=1&transparent=1"
                     />
                   </div>
                 </div>
@@ -976,7 +1055,7 @@ const CircleShape: React.FC = () => {
               textAlign: "center",
               letterSpacing: "1px",
               fontWeight: 800
-            }}>🟥 What is a Square?</h2>
+            }}>� What is a Triangle?</h2>
             <p style={{ 
               color: "#4b5563", 
               lineHeight: 1.8, 
@@ -985,7 +1064,7 @@ const CircleShape: React.FC = () => {
               maxWidth: "900px",
               margin: "0 auto"
             }}>
-              A square is a shape with four equal sides and four right angles.
+              A triangle is a shape with three sides and three angles. Triangles are strong and used in many structures!
             </p>
           </motion.div>
 
@@ -1010,7 +1089,7 @@ const CircleShape: React.FC = () => {
               fontSize: "1.9rem", 
               textAlign: "center",
               letterSpacing: "1px"
-            }}>✨ Fun Facts About Squares!</h3>
+            }}>✨ Fun Facts About Triangles!</h3>
 
             <div style={{
               display: "grid",
@@ -1019,25 +1098,25 @@ const CircleShape: React.FC = () => {
               marginTop: "1rem"
             }}>
               {[{
-                icon: "🪟",
-                title: "Window Pane",
-                text: "Many window panes are perfect squares."
+                icon: "🏔️",
+                title: "Mountains",
+                text: "Mountains often have triangular shapes."
               },{
-                icon: "🧀",
-                title: "Cheese Slice",
-                text: "Some cheese slices are cut into neat squares."
+                icon: "🏗️",
+                title: "Bridge Trusses",
+                text: "Bridges use triangles to stay strong and stable."
               },{
-                icon: "🧩",
-                title: "Floor Tiles",
-                text: "Tiles on floors and walls are often square."
+                icon: "⛺",
+                title: "Tent Roof",
+                text: "Tents and roofs are often built with triangles."
               },{
-                icon: "🎲",
-                title: "Dice Face",
-                text: "Each face of a die is a square."
+                icon: "🎸",
+                title: "Guitar Pick",
+                text: "Guitar picks are small triangular shapes."
               },{
-                icon: "♟️",
-                title: "Chessboard",
-                text: "A chessboard is made of 64 black and white squares."
+                icon: "🍕",
+                title: "Pizza Slice",
+                text: "Each slice of pizza is a perfect triangle!"
               }].map((fact, idx) => (
                 <motion.div
                   key={idx}
@@ -1072,7 +1151,7 @@ const CircleShape: React.FC = () => {
             </div>
           </motion.div>
 
-            {/* Preschool Square Drawing Game */}
+            {/* Preschool Triangle Drawing Game */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -1109,7 +1188,7 @@ const CircleShape: React.FC = () => {
                   opacity: 0.4,
                   pointerEvents: "none"
                 }}
-              >⭕</motion.div>
+              >🔺</motion.div>
               <motion.div 
                 animate={{ 
                   y: [0, -10, 0],
@@ -1175,7 +1254,7 @@ const CircleShape: React.FC = () => {
                   fontWeight: "bold"
                 }}
               >
-                🟥 Square Drawing Game! 🌟
+                🔺 Triangle Drawing Game! 🌟
               </motion.h3>
 
               <motion.p 
@@ -1189,7 +1268,7 @@ const CircleShape: React.FC = () => {
                   fontWeight: "500"
                 }}
               >
-                Trace along the blue square! 🎯
+                Trace along the blue triangle! 🎯
               </motion.p>
 
               <div style={{
@@ -1379,7 +1458,7 @@ const CircleShape: React.FC = () => {
                     </motion.div>
                     <div>
                       <h4 style={{ margin: 0, color: "#D35400", fontSize: "1.5rem" }}>Amazing Job!</h4>
-                      <p style={{ margin: "0.3rem 0 0 0", color: "#7D5A00", fontSize: "1.1rem" }}>You drew a beautiful circle! 🎉</p>
+                      <p style={{ margin: "0.3rem 0 0 0", color: "#7D5A00", fontSize: "1.1rem" }}>You drew a beautiful triangle! 🎉</p>
                     </div>
                   </motion.div>
                 )}
@@ -1409,7 +1488,7 @@ const CircleShape: React.FC = () => {
                     </motion.div>
                     <div>
                       <h4 style={{ margin: 0, color: "#27AE60", fontSize: "1.5rem" }}>Keep Going!</h4>
-                      <p style={{ margin: "0.3rem 0 0 0", color: "#229954", fontSize: "1.1rem" }}>Try drawing around the blue circle again! 🌈</p>
+                      <p style={{ margin: "0.3rem 0 0 0", color: "#229954", fontSize: "1.1rem" }}>Try drawing around the blue triangle again! 🌈</p>
                     </div>
                   </motion.div>
                 )}
@@ -1482,7 +1561,7 @@ const CircleShape: React.FC = () => {
                     textAlign: "center",
                     lineHeight: 1.6
                   }}>
-                    <strong>👶 For Ages 5-6:</strong> Touch or click and drag your finger/mouse around the blue circle. 
+                    <strong>👶 For Ages 5-6:</strong> Touch or click and drag your finger/mouse around the blue triangle. 
                     Go slow and steady! This helps practice drawing and builds hand strength for writing. 📝
                   </p>
                 </motion.div>
@@ -1548,9 +1627,9 @@ const CircleShape: React.FC = () => {
               marginTop: "2rem"
             }}
           >
-            <h3 style={{ fontSize: "2rem", margin: 0, color: "#2d3142" }}>🌟 Great Job Learning About Squares! 🌟</h3>
+            <h3 style={{ fontSize: "2rem", margin: 0, color: "#2d3142" }}>🌟 Great Job Learning About Triangles! 🌟</h3>
             <p style={{ fontSize: "1.2rem", color: "#2d3142", marginTop: "1rem" }}>
-              Keep exploring and have fun with squares!
+              Keep exploring and have fun with triangles!
             </p>
           </motion.div>
         </section>
