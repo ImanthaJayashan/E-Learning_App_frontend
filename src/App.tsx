@@ -2,6 +2,7 @@ import React from "react";
 import { Route, Routes } from "react-router-dom";
 import Home from "./pages/Home";
 import EyeProblemDetector from "./pages/EyeProblemDetector";
+import VisionTherapy from "./pages/VisionTherapy";
 import CircleShape from "./pages/CircleShape";
 import SquareShape from "./pages/SquareShape";
 import TriangleShape from "./pages/TriangleShape_new";
@@ -11,6 +12,7 @@ const App: React.FC = () => (
   <Routes>
     <Route path="/" element={<Home />} />
     <Route path="/eye-problem-detector" element={<EyeProblemDetector />} />
+    <Route path="/vision-therapy" element={<VisionTherapy />} />
     <Route path="/shapes/circle" element={<CircleShape />} />
     <Route path="/shapes/square" element={<SquareShape />} />
     <Route path="/shapes/triangle" element={<TriangleShape />} />
