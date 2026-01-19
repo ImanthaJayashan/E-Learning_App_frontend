@@ -86,18 +86,10 @@ const VisionTherapy: React.FC = () => {
 
     .vision-therapy-container {
       min-height: 100vh;
-      background: linear-gradient(180deg, #87ceeb 0%, #e0f6ff 100%);
-      background-image: 
-        repeating-linear-gradient(
-          90deg,
-          transparent,
-          transparent 35px,
-          rgba(173, 216, 230, 0.3) 35px,
-          rgba(173, 216, 230, 0.3) 70px
-        ),
-        linear-gradient(180deg, #87ceeb 0%, #e0f6ff 100%);
+      background: url('/1378627_4982.svg') center / cover no-repeat;
       position: relative;
       overflow: hidden;
+      padding-bottom: 8rem; /* keep buttons clear of footer */
     }
 
     .cloud {
@@ -147,8 +139,10 @@ const VisionTherapy: React.FC = () => {
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
+      gap: 1.5rem;
       padding: 2rem;
       padding-top: 4rem;
+      padding-bottom: 6rem; /* extra breathing room above footer */
     }
 
     .header-text {
@@ -191,28 +185,22 @@ const VisionTherapy: React.FC = () => {
       font-style: italic;
     }
 
-    .action-button {
-      margin-top: 3rem;
-      padding: 1rem 2.5rem;
-      font-size: 1.25rem;
-      font-weight: bold;
-      background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-      color: white;
+    .go-button {
+      background: none;
       border: none;
-      border-radius: 50px;
       cursor: pointer;
-      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
-      transition: all 0.3s ease;
-      animation: slideDown 0.8s ease-out 0.9s both;
+      padding: 0;
+      margin: 0;
+      transition: transform 0.2s ease, filter 0.2s ease;
     }
 
-    .action-button:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3);
+    .go-button:hover {
+      transform: scale(1.02) translateY(-4px);
+      filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.25));
     }
 
-    .action-button:active {
-      transform: translateY(-1px);
+    .go-button:active {
+      transform: scale(0.99);
     }
 
     .home-button {
@@ -275,25 +263,6 @@ const VisionTherapy: React.FC = () => {
       <style>{styles}</style>
       <Navbar />
       <div className="vision-therapy-container">
-        {/* Clouds */}
-        <div className="cloud cloud1" />
-        <div className="cloud cloud2" />
-        <div className="cloud cloud3" />
-
-        {/* Butterflies */}
-        {butterflyPositions.map((butterfly) => (
-          <div
-            key={butterfly.id}
-            className="butterfly"
-            style={{
-              left: `${butterfly.left}%`,
-              top: `${butterfly.top}%`,
-              animationDelay: `${butterfly.id * 0.3}s`,
-            }}
-          >
-            🦋
-          </div>
-        ))}
 
         {/* Main Content */}
         <div className="main-content">
@@ -328,28 +297,17 @@ const VisionTherapy: React.FC = () => {
             />
           </div>
 
-          <div className="go-text">GO!</div>
-
           <button
             type="button"
-            className="action-button"
+            className="go-text go-button"
             onClick={() => navigate("/shapes/circle")}
+            aria-label="Start vision therapy"
           >
-            🎮 Start Vision Therapy
+            GO!
           </button>
         </div>
 
-        {/* Flowers at bottom */}
-        <div className="flowers-container">
-          <div className="flower">🌻</div>
-          <div className="flower">🌸</div>
-          <div className="flower">🌼</div>
-          <div className="flower">🌷</div>
-          <div className="flower">🌺</div>
-          <div className="flower">🌻</div>
-          <div className="flower">🌸</div>
-          <div className="flower">🌼</div>
-        </div>
+        
       </div>
       <Footer />
     </div>
