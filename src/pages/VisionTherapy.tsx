@@ -300,7 +300,7 @@ const VisionTherapy: React.FC = () => {
           <button
             type="button"
             className="go-text go-button"
-            onClick={() => navigate("/shapes/circle")}
+            onClick={() => navigate("/games")}
             aria-label="Start vision therapy"
           >
             GO!
