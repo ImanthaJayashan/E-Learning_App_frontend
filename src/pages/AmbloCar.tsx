@@ -1,11 +1,132 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
+type Car = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  speed: number;
+  color: string;
+};
+
 const AmbloCar: React.FC = () => {
   const navigate = useNavigate();
   const [score, setScore] = useState(0);
+
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const scaleRef = useRef(1);
+  const BASE_WIDTH = 1080;
+  const BASE_HEIGHT = 540;
+  const START_Y = BASE_HEIGHT - 60;
+  const TOP_GOAL = 40;
+
+  const man = useRef({
+    x: BASE_WIDTH / 2 - 10,
+    y: START_Y,
+    width: 20,
+    height: 20,
+  });
+
+  const cars = useRef<Car[]>([
+    { x: 0, y: 80, width: 50, height: 20, speed: 1.2, color: "#FF6F6F" },
+    { x: 300, y: 130, width: 50, height: 20, speed: -1, color: "#6FA8FF" },
+    { x: 0, y: 180, width: 50, height: 20, speed: 1.5, color: "#FF6F6F" },
+  ]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let animationId = 0;
+
+    const resizeCanvas = () => {
+      const availableWidth = Math.min(window.innerWidth * 0.95, 1400);
+      const availableHeight = Math.min(window.innerHeight * 0.85, 900);
+      const scale = Math.min(availableWidth / BASE_WIDTH, availableHeight / BASE_HEIGHT);
+      scaleRef.current = scale;
+      canvas.width = BASE_WIDTH * scale;
+      canvas.height = BASE_HEIGHT * scale;
+    };
+
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+
+    const drawRoad = () => {
+      ctx.fillStyle = "#E5E7EB";
+      ctx.fillRect(0, 80, BASE_WIDTH, 220);
+    };
+
+    const drawMan = () => {
+      ctx.fillStyle = "#7ED957";
+      ctx.fillRect(man.current.x, man.current.y, man.current.width, man.current.height);
+    };
+
+    const drawCars = () => {
+      cars.current.forEach((car) => {
+        ctx.fillStyle = car.color;
+        ctx.fillRect(car.x, car.y, car.width, car.height);
+
+        car.x += car.speed;
+
+        if (car.speed > 0 && car.x > BASE_WIDTH) car.x = -car.width;
+        if (car.speed < 0 && car.x < -car.width) car.x = BASE_WIDTH;
+      });
+    };
+
+    const isCollide = (a: { x: number; y: number; width: number; height: number }, b: Car) => {
+      return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
+    };
+
+    const update = () => {
+      ctx.setTransform(scaleRef.current, 0, 0, scaleRef.current, 0, 0);
+      ctx.fillStyle = "#F9FAF7";
+      ctx.fillRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
+
+      drawRoad();
+      drawCars();
+      drawMan();
+
+      cars.current.forEach((car) => {
+        if (isCollide(man.current, car)) {
+          window.alert("❌ Hit by car!");
+          man.current.y = START_Y;
+        }
+      });
+
+      if (man.current.y <= TOP_GOAL) {
+        setScore((s) => s + 1);
+        man.current.y = START_Y;
+      }
+
+      animationId = requestAnimationFrame(update);
+    };
+
+    update();
+
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowUp") man.current.y = Math.max(10, man.current.y - 24);
+      if (e.key === "ArrowDown") man.current.y = Math.min(START_Y, man.current.y + 24);
+    };
+
+    window.addEventListener("keydown", handleKey);
+    return () => {
+      window.removeEventListener("keydown", handleKey);
+      window.removeEventListener("resize", resizeCanvas);
+      cancelAnimationFrame(animationId);
+    };
+  }, []);
+
+  const resetGame = () => {
+    setScore(0);
+    man.current.x = 140;
+    man.current.y = 260;
+  };
 
   const styles = `
     * {
@@ -21,15 +142,15 @@ const AmbloCar: React.FC = () => {
       flex-direction: column;
       position: relative;
       padding-top: 0;
-      padding-bottom: 4rem;
+      padding-bottom: 2rem;
     }
 
     .amblocar-container {
       flex: 1;
-      max-width: 1400px;
-      margin: 0 auto;
       width: 100%;
-      padding: 3rem 2rem;
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: clamp(1.5rem, 3vw, 3rem) clamp(1rem, 3vw, 3rem);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -62,12 +183,13 @@ const AmbloCar: React.FC = () => {
 
     .game-area {
       width: 100%;
-      max-width: 900px;
-      background: white;
-      border-radius: 30px;
-      padding: 3rem;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+      max-width: 1200px;
+      background: rgba(255, 255, 255, 0.96);
+      border-radius: 32px;
+      padding: clamp(1.5rem, 3vw, 3rem);
+      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.18);
       animation: fadeIn 0.6s ease-out;
+      backdrop-filter: blur(4px);
     }
 
     @keyframes fadeIn {
@@ -79,7 +201,7 @@ const AmbloCar: React.FC = () => {
         opacity: 1;
         transform: translateY(0);
       }
-    }
+        man.current.y = START_Y;
 
     .car-display {
       width: 100%;
@@ -200,6 +322,27 @@ const AmbloCar: React.FC = () => {
       transform: scale(0.95);
     }
 
+    .game-canvas {
+      width: min(1100px, 95vw);
+      height: min(80vh, 720px);
+      min-height: 360px;
+      border-radius: 22px;
+      border: 4px solid #FFD700;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+      background: #f9fafb;
+      margin: 0 auto 1.5rem;
+      display: block;
+    }
+
+    .controls-hint {
+      text-align: center;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #444;
+      margin: 0.5rem 0 1.5rem;
+      font-family: 'Nunito', sans-serif;
+    }
+
     @media (max-width: 768px) {
       .amblocar-container {
         padding: 2rem 1rem;
@@ -272,27 +415,34 @@ const AmbloCar: React.FC = () => {
           </div>
 
           <div className="game-area">
-            <div className="car-display">🏎️</div>
-
             <div className="score-board">
               <div className="score-label">Your Score</div>
               <div className="score-value">{score}</div>
             </div>
 
+            <canvas
+              ref={canvasRef}
+              width={BASE_WIDTH}
+              height={BASE_HEIGHT}
+              className="game-canvas"
+              aria-label="Cross the road game canvas"
+            />
+
+            <p className="controls-hint">Use ⬆️⬇️ arrow keys to cross safely.</p>
+
             <div className="game-instructions">
               <div className="instructions-title">📋 How to Play</div>
               <div className="instructions-text">
-                Guide the car through the track to complete the level. 
-                Avoid obstacles and collect power-ups to boost your score!
+                Move up and down with the arrow keys. Reach the top to score. Avoid cars or you will be sent back to start!
               </div>
             </div>
 
             <div className="button-group">
               <button 
                 className="btn btn-play"
-                onClick={() => setScore(score + 10)}
+                onClick={resetGame}
               >
-                ▶️ Start Game
+                ▶️ Reset
               </button>
               <button 
                 className="btn btn-back"
