@@ -1,107 +1,144 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
 
-type Car = {
+type Vehicle = {
   x: number;
   y: number;
   width: number;
   height: number;
   speed: number;
   color: string;
+  type: "car" | "truck";
 };
 
 const AmbloCar: React.FC = () => {
   const navigate = useNavigate();
-  const [score, setScore] = useState(0);
-
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const scaleRef = useRef(1);
-  const BASE_WIDTH = 1080;
-  const BASE_HEIGHT = 540;
-  const START_Y = BASE_HEIGHT - 60;
-  const TOP_GOAL = 40;
+
+  const [score, setScore] = useState(0);
+  const [time, setTime] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
+  const [gameWon, setGameWon] = useState(false);
+
+  const size = useRef({ w: window.innerWidth, h: window.innerHeight });
 
   const man = useRef({
-    x: BASE_WIDTH / 2 - 10,
-    y: START_Y,
+    x: 0,
+    y: 0,
     width: 20,
-    height: 20,
+    height: 25,
   });
 
-  const cars = useRef<Car[]>([
-    { x: 0, y: 80, width: 50, height: 20, speed: 1.2, color: "#FF6F6F" },
-    { x: 300, y: 130, width: 50, height: 20, speed: -1, color: "#6FA8FF" },
-    { x: 0, y: 180, width: 50, height: 20, speed: 1.5, color: "#FF6F6F" },
+  const vehicles = useRef<Vehicle[]>([
+    { x: 0, y: 140, width: 70, height: 24, speed: 2, color: "#FF6F6F", type: "car" },
+    { x: 400, y: 220, width: 110, height: 30, speed: -2.2, color: "#6FA8FF", type: "truck" },
+    { x: 0, y: 300, width: 75, height: 24, speed: 2.4, color: "#7ED957", type: "car" },
+    { x: 450, y: 380, width: 120, height: 32, speed: -2, color: "#FFB347", type: "truck" },
   ]);
 
+  /* ---------------- TIMER ---------------- */
+  useEffect(() => {
+    if (paused || gameOver || gameWon) return;
+
+    const timer = setInterval(() => {
+      setTime((t) => t + 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [paused, gameOver, gameWon]);
+
+  /* ---------------- GAME ---------------- */
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    let animationId = 0;
+    const resize = () => {
+      size.current = { w: window.innerWidth, h: window.innerHeight };
+      canvas.width = size.current.w;
+      canvas.height = size.current.h;
 
-    const resizeCanvas = () => {
-      const availableWidth = Math.min(window.innerWidth * 0.95, 1400);
-      const availableHeight = Math.min(window.innerHeight * 0.85, 900);
-      const scale = Math.min(availableWidth / BASE_WIDTH, availableHeight / BASE_HEIGHT);
-      scaleRef.current = scale;
-      canvas.width = BASE_WIDTH * scale;
-      canvas.height = BASE_HEIGHT * scale;
+      man.current.x = size.current.w / 2 - 10;
+      man.current.y = size.current.h - 80;
     };
 
-    resizeCanvas();
-    window.addEventListener("resize", resizeCanvas);
+    resize();
+    window.addEventListener("resize", resize);
 
-    const drawRoad = () => {
-      ctx.fillStyle = "#E5E7EB";
-      ctx.fillRect(0, 80, BASE_WIDTH, 220);
+    let animationId: number;
+
+    const drawBackground = () => {
+      const { w, h } = size.current;
+
+      ctx.fillStyle = "#CDEFFD";
+      ctx.fillRect(0, 0, w, h);
+
+      ctx.fillStyle = "#A7D676";
+      ctx.fillRect(0, 80, w, h - 160);
+
+      ctx.fillStyle = "#EDEDED";
+      ctx.fillRect(0, 160, w, h - 320);
+
+      ctx.fillStyle = "#D0D0D0";
+      ctx.fillRect(0, 80, w, 80);
+      ctx.fillRect(0, h - 160, w, 80);
     };
 
     const drawMan = () => {
-      ctx.fillStyle = "#7ED957";
-      ctx.fillRect(man.current.x, man.current.y, man.current.width, man.current.height);
+      ctx.fillStyle = "#444";
+      ctx.beginPath();
+      ctx.arc(man.current.x + 10, man.current.y + 6, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillRect(man.current.x + 7, man.current.y + 12, 6, 13);
     };
 
-    const drawCars = () => {
-      cars.current.forEach((car) => {
-        ctx.fillStyle = car.color;
-        ctx.fillRect(car.x, car.y, car.width, car.height);
+    const drawVehicle = (v: Vehicle) => {
+      ctx.fillStyle = v.color;
+      ctx.beginPath();
+      ctx.roundRect(v.x, v.y, v.width, v.height, 10);
+      ctx.fill();
 
-        car.x += car.speed;
+      ctx.fillStyle = "rgba(255,255,255,0.6)";
+      ctx.fillRect(v.x + 10, v.y + 5, v.width / 3, v.height / 2);
 
-        if (car.speed > 0 && car.x > BASE_WIDTH) car.x = -car.width;
-        if (car.speed < 0 && car.x < -car.width) car.x = BASE_WIDTH;
-      });
+      ctx.fillStyle = v.color;
+      ctx.beginPath();
+      ctx.arc(v.x + 14, v.y + v.height, 6, 0, Math.PI * 2);
+      ctx.arc(v.x + v.width - 14, v.y + v.height, 6, 0, Math.PI * 2);
+      ctx.fill();
     };
 
-    const isCollide = (a: { x: number; y: number; width: number; height: number }, b: Car) => {
-      return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
-    };
+    const isCollide = (a: any, b: Vehicle) =>
+      a.x < b.x + b.width &&
+      a.x + a.width > b.x &&
+      a.y < b.y + b.height &&
+      a.y + a.height > b.y;
 
     const update = () => {
-      ctx.setTransform(scaleRef.current, 0, 0, scaleRef.current, 0, 0);
-      ctx.fillStyle = "#F9FAF7";
-      ctx.fillRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
+      if (paused || gameOver || gameWon) return;
 
-      drawRoad();
-      drawCars();
+      const { w, h } = size.current;
+      ctx.clearRect(0, 0, w, h);
+
+      drawBackground();
       drawMan();
 
-      cars.current.forEach((car) => {
-        if (isCollide(man.current, car)) {
-          window.alert("❌ Hit by car!");
-          man.current.y = START_Y;
+      vehicles.current.forEach((v) => {
+        drawVehicle(v);
+        v.x += v.speed;
+
+        if (v.speed > 0 && v.x > w) v.x = -v.width;
+        if (v.speed < 0 && v.x < -v.width) v.x = w;
+
+        if (isCollide(man.current, v)) {
+          setGameOver(true);
         }
       });
 
-      if (man.current.y <= TOP_GOAL) {
-        setScore((s) => s + 1);
-        man.current.y = START_Y;
+      if (man.current.y < 100) {
+        setGameWon(true);
       }
 
       animationId = requestAnimationFrame(update);
@@ -110,354 +147,149 @@ const AmbloCar: React.FC = () => {
     update();
 
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowUp") man.current.y = Math.max(10, man.current.y - 24);
-      if (e.key === "ArrowDown") man.current.y = Math.min(START_Y, man.current.y + 24);
+      if (paused || gameOver || gameWon) return;
+
+      if (e.key === "ArrowUp") man.current.y -= 25;
+      if (e.key === "ArrowDown") man.current.y += 25;
+
+      man.current.y = Math.max(50, Math.min(man.current.y, size.current.h - 80));
     };
 
     window.addEventListener("keydown", handleKey);
-    return () => {
-      window.removeEventListener("keydown", handleKey);
-      window.removeEventListener("resize", resizeCanvas);
-      cancelAnimationFrame(animationId);
-    };
-  }, []);
 
+    return () => {
+      cancelAnimationFrame(animationId);
+      window.removeEventListener("keydown", handleKey);
+      window.removeEventListener("resize", resize);
+    };
+  }, [paused, gameOver, gameWon]);
+
+  /* ---------------- RESET ---------------- */
   const resetGame = () => {
     setScore(0);
-    man.current.x = 140;
-    man.current.y = 260;
+    setTime(0);
+    setGameOver(false);
+    setGameWon(false);
+    setPaused(false);
+    man.current.y = size.current.h - 80;
   };
 
-  const styles = `
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    .amblocar-page {
-      min-height: 100vh;
-      background: linear-gradient(180deg, #FFE5B4 0%, #FFD700 50%, #FFA500 100%);
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      padding-top: 0;
-      padding-bottom: 2rem;
-    }
-
-    .amblocar-container {
-      flex: 1;
-      width: 100%;
-      max-width: 1600px;
-      margin: 0 auto;
-      padding: clamp(1.5rem, 3vw, 3rem) clamp(1rem, 3vw, 3rem);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .amblocar-header {
-      text-align: center;
-      margin-bottom: 3rem;
-    }
-
-    .amblocar-title {
-      font-size: clamp(2.5rem, 5vw, 4rem);
-      font-weight: 900;
-      background: linear-gradient(135deg, #FF4444, #4444FF);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 1rem;
-      font-family: 'Fredoka One', 'Comic Sans MS', sans-serif;
-      letter-spacing: 3px;
-    }
-
-    .amblocar-subtitle {
-      font-size: 1.5rem;
-      color: #333;
-      font-weight: 600;
-      font-family: 'Nunito', sans-serif;
-    }
-
-    .game-area {
-      width: 100%;
-      max-width: 1200px;
-      background: rgba(255, 255, 255, 0.96);
-      border-radius: 32px;
-      padding: clamp(1.5rem, 3vw, 3rem);
-      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.18);
-      animation: fadeIn 0.6s ease-out;
-      backdrop-filter: blur(4px);
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-        man.current.y = START_Y;
-
-    .car-display {
-      width: 100%;
-      height: 300px;
-      background: linear-gradient(135deg, #FF4444, #4444FF);
-      border-radius: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 8rem;
-      margin-bottom: 2rem;
-      box-shadow: inset 0 8px 20px rgba(0, 0, 0, 0.1);
-      animation: float 3s ease-in-out infinite;
-    }
-
-    @keyframes float {
-      0%, 100% {
-        transform: translateY(0px);
-      }
-      50% {
-        transform: translateY(-20px);
-      }
-    }
-
-    .score-board {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-
-    .score-label {
-      font-size: 1.3rem;
-      font-weight: 700;
-      color: #666;
-      margin-bottom: 0.5rem;
-      font-family: 'Nunito', sans-serif;
-    }
-
-    .score-value {
-      font-size: 3rem;
-      font-weight: 900;
-      background: linear-gradient(135deg, #FF4444, #4444FF);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      font-family: 'Fredoka One', sans-serif;
-    }
-
-    .game-instructions {
-      background: linear-gradient(135deg, #FFE5B4, #FFF9E6);
-      border-radius: 16px;
-      padding: 1.5rem;
-      margin-bottom: 2rem;
-      border-left: 5px solid #FFA500;
-    }
-
-    .instructions-title {
-      font-size: 1.2rem;
-      font-weight: 800;
-      color: #FF6B00;
-      margin-bottom: 0.8rem;
-      font-family: 'Fredoka One', sans-serif;
-    }
-
-    .instructions-text {
-      font-size: 1.1rem;
-      color: #333;
-      line-height: 1.8;
-      font-family: 'Nunito', sans-serif;
-    }
-
-    .button-group {
-      display: flex;
-      gap: 1.5rem;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .btn {
-      border: none;
-      border-radius: 25px;
-      padding: 1.2rem 2.5rem;
-      font-size: 1.3rem;
-      font-weight: 900;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      font-family: 'Fredoka One', 'Comic Sans MS', sans-serif;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-    }
-
-    .btn-play {
-      background: linear-gradient(135deg, #FFD700, #FFA500);
-      color: #2d3142;
-      box-shadow: 0 10px 30px rgba(255, 165, 0, 0.4);
-    }
-
-    .btn-play:hover {
-      transform: translateY(-5px) scale(1.05);
-      box-shadow: 0 15px 40px rgba(255, 165, 0, 0.5);
-    }
-
-    .btn-play:active {
-      transform: scale(0.95);
-    }
-
-    .btn-back {
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      color: white;
-      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
-    }
-
-    .btn-back:hover {
-      transform: translateY(-5px) scale(1.05);
-      box-shadow: 0 15px 40px rgba(102, 126, 234, 0.5);
-    }
-
-    .btn-back:active {
-      transform: scale(0.95);
-    }
-
-    .game-canvas {
-      width: min(1100px, 95vw);
-      height: min(80vh, 720px);
-      min-height: 360px;
-      border-radius: 22px;
-      border: 4px solid #FFD700;
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
-      background: #f9fafb;
-      margin: 0 auto 1.5rem;
-      display: block;
-    }
-
-    .controls-hint {
-      text-align: center;
-      font-size: 1rem;
-      font-weight: 700;
-      color: #444;
-      margin: 0.5rem 0 1.5rem;
-      font-family: 'Nunito', sans-serif;
-    }
-
-    @media (max-width: 768px) {
-      .amblocar-container {
-        padding: 2rem 1rem;
-      }
-
-      .game-area {
-        padding: 2rem;
-      }
-
-      .car-display {
-        height: 200px;
-        font-size: 5rem;
-      }
-
-      .score-value {
-        font-size: 2rem;
-      }
-
-      .btn {
-        padding: 1rem 2rem;
-        font-size: 1.1rem;
-      }
-
-      .button-group {
-        gap: 1rem;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .amblocar-title {
-        font-size: 2rem;
-      }
-
-      .game-area {
-        padding: 1.5rem;
-      }
-
-      .car-display {
-        height: 150px;
-        font-size: 4rem;
-        margin-bottom: 1.5rem;
-      }
-
-      .btn {
-        padding: 0.9rem 1.8rem;
-        font-size: 1rem;
-      }
-
-      .button-group {
-        flex-direction: column;
-        width: 100%;
-      }
-
-      .btn {
-        width: 100%;
-      }
-    }
-  `;
-
   return (
-    <div>
-      <style>{styles}</style>
-      <Navbar />
+    <div style={{ margin: 0, overflow: "hidden" }}>
+      <canvas ref={canvasRef} />
 
-      <div className="amblocar-page">
-        <div className="amblocar-container">
-          <div className="amblocar-header">
-            <h1 className="amblocar-title">🚗 AmbloCar Game</h1>
-            <p className="amblocar-subtitle">Help the car find its way!</p>
-          </div>
-
-          <div className="game-area">
-            <div className="score-board">
-              <div className="score-label">Your Score</div>
-              <div className="score-value">{score}</div>
-            </div>
-
-            <canvas
-              ref={canvasRef}
-              width={BASE_WIDTH}
-              height={BASE_HEIGHT}
-              className="game-canvas"
-              aria-label="Cross the road game canvas"
-            />
-
-            <p className="controls-hint">Use ⬆️⬇️ arrow keys to cross safely.</p>
-
-            <div className="game-instructions">
-              <div className="instructions-title">📋 How to Play</div>
-              <div className="instructions-text">
-                Move up and down with the arrow keys. Reach the top to score. Avoid cars or you will be sent back to start!
-              </div>
-            </div>
-
-            <div className="button-group">
-              <button 
-                className="btn btn-play"
-                onClick={resetGame}
-              >
-                ▶️ Reset
-              </button>
-              <button 
-                className="btn btn-back"
-                onClick={() => navigate("/games")}
-              >
-                ← Back to Games
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* TOP LEFT - SCORE */}
+      <div style={uiBox("left")}>
+        🏆 Score: {score}
       </div>
 
-      <Footer />
+      {/* TOP RIGHT - TIME + PAUSE */}
+      <div style={uiBox("right")}>
+        ⏱ Time: {time}s
+        <br />
+        <button onClick={() => setPaused((p) => !p)} style={btnStyle}>
+          {paused ? "▶ Resume" : "⏸ Pause"}
+        </button>
+      </div>
+
+      {/* HOME BUTTON */}
+      <div style={homeButtonStyle}>
+        <button onClick={() => navigate("/games")} style={homeBtnStyle}>
+          🏠 Back to Games
+        </button>
+      </div>
+
+      {/* GAME OVER */}
+      {gameOver && (
+        <div style={gameOverStyle}>
+          <h1>❌ GAME OVER</h1>
+          <p>Score: {score}</p>
+          <p>Time: {time}s</p>
+          <button onClick={resetGame} style={btnStyle}>🔁 Restart</button>
+        </div>
+      )}
+
+      {/* GAME WON */}
+      {gameWon && (
+        <div style={gameWonStyle}>
+          <h1>🎉 YOU WON!</h1>
+          <p>Congratulations! You made it across safely!</p>
+          <p>⏱ Time: {time}s</p>
+          <div style={{ marginTop: 20, display: "flex", gap: 10, justifyContent: "center" }}>
+            <button onClick={resetGame} style={btnStyle}>🔁 Play Again</button>
+            <button onClick={() => navigate("/games")} style={btnStyle}>🏠 Back to Games</button>
+          </div>
+        </div>
+      )}
     </div>
   );
+};
+
+/* ---------------- STYLES ---------------- */
+
+const uiBox = (side: "left" | "right") => ({
+  position: "fixed" as const,
+  top: 12,
+  [side]: 20,
+  background: "rgba(255,255,255,0.75)",
+  padding: "10px 14px",
+  borderRadius: 10,
+  fontWeight: "bold",
+  fontSize: 16,
+});
+
+const btnStyle = {
+  marginTop: 6,
+  padding: "6px 12px",
+  borderRadius: 8,
+  border: "none",
+  fontWeight: "bold",
+  cursor: "pointer",
+};
+
+const homeButtonStyle = {
+  position: "fixed" as const,
+  bottom: 20,
+  left: 20,
+  zIndex: 1000,
+};
+
+const homeBtnStyle = {
+  padding: "10px 20px",
+  borderRadius: 10,
+  border: "none",
+  fontWeight: "bold",
+  fontSize: 16,
+  cursor: "pointer",
+  background: "linear-gradient(135deg, #667eea, #764ba2)",
+  color: "white",
+  boxShadow: "0 4px 15px rgba(102, 126, 234, 0.4)",
+  transition: "all 0.3s ease",
+};
+
+const gameOverStyle = {
+  position: "fixed" as const,
+  inset: 0,
+  background: "rgba(0,0,0,0.6)",
+  color: "#fff",
+  display: "flex",
+  flexDirection: "column" as const,
+  alignItems: "center",
+  justifyContent: "center",
+  textAlign: "center" as const,
+};
+
+const gameWonStyle = {
+  position: "fixed" as const,
+  inset: 0,
+  background: "linear-gradient(135deg, rgba(102, 194, 165, 0.95), rgba(35, 155, 86, 0.95))",
+  color: "#fff",
+  display: "flex",
+  flexDirection: "column" as const,
+  alignItems: "center",
+  justifyContent: "center",
+  textAlign: "center" as const,
+  fontSize: 18,
 };
 
 export default AmbloCar;
