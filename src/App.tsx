@@ -4,6 +4,7 @@ import Home from "./pages/Home";
 import EyeProblemDetector from "./pages/EyeProblemDetector";
 import VisionTherapy from "./pages/VisionTherapy";
 import GamesPage from "./pages/GamesPage";
+import AmbloCar from "./pages/AmbloCar";
 import CircleShape from "./pages/CircleShape";
 import SquareShape from "./pages/SquareShape";
 import TriangleShape from "./pages/TriangleShape_new";
@@ -15,6 +16,7 @@ const App: React.FC = () => (
     <Route path="/eye-problem-detector" element={<EyeProblemDetector />} />
     <Route path="/vision-therapy" element={<VisionTherapy />} />
     <Route path="/games" element={<GamesPage />} />
+    <Route path="/games/amblocar" element={<AmbloCar />} />
     <Route path="/shapes/circle" element={<CircleShape />} />
     <Route path="/shapes/square" element={<SquareShape />} />
     <Route path="/shapes/triangle" element={<TriangleShape />} />

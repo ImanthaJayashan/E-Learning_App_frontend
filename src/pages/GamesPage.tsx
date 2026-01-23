@@ -34,32 +34,37 @@ const GamesPage: React.FC = () => {
 
   const games = [
     {
-      title: "CIRCLE",
+      title: "AmbloCar",
       level: "LEVEL 1",
       color1: "#FF4444",
       color2: "#4444FF",
-      route: "/shapes/circle"
+      route: "/games/amblocar",
+      image: "/688abcca075993afaacd3536_Amblyoplay%201.png",
+      icon: "⭕"
     },
     {
       title: "SQUARE",
       level: "LEVEL 2",
       color1: "#FF4444",
       color2: "#4444FF",
-      route: "/shapes/square"
+      route: "/shapes/square",
+      icon: "🟦"
     },
     {
       title: "TRIANGLE",
       level: "LEVEL 3",
       color1: "#FF4444",
       color2: "#4444FF",
-      route: "/shapes/triangle"
+      route: "/shapes/triangle",
+      icon: "🔺"
     },
     {
       title: "STAR",
       level: "LEVEL 4",
       color1: "#FF4444",
       color2: "#4444FF",
-      route: "/shapes/star"
+      route: "/shapes/star",
+      icon: "⭐"
     }
   ];
 
@@ -131,16 +136,18 @@ const GamesPage: React.FC = () => {
 
     .games-page {
       min-height: 100vh;
-      background: linear-gradient(180deg, #E3F2FD 0%, #FFF3E0 50%, #F3E5F5 100%);
+      background: radial-gradient(circle at 20% 20%, rgba(255, 221, 255, 0.6), transparent 30%),
+        radial-gradient(circle at 80% 0%, rgba(197, 225, 255, 0.55), transparent 28%),
+        linear-gradient(180deg, #e7f2ff 0%, #fef5f4 50%, #f3e5f5 100%);
       position: relative;
       padding-top: 0;
       padding-bottom: 4rem;
     }
 
     .games-container {
-      max-width: 1600px;
+      max-width: 1500px;
       margin: 0 auto;
-      padding: 0;
+      padding: 0 1.5rem 1rem;
     }
 
     .games-header {
@@ -265,21 +272,22 @@ const GamesPage: React.FC = () => {
 
     .games-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 2.5rem;
-      padding: 0 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      padding: 0 0.5rem;
     }
 
     .game-card {
-      background: white;
-      border-radius: 28px;
-      padding: 2.5rem 2rem;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      background: rgba(255, 255, 255, 0.92);
+      border-radius: 30px;
+      padding: 2.4rem 2rem 2rem;
+      box-shadow: 0 18px 50px rgba(20, 24, 62, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.6);
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 1.8rem;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      gap: 1.6rem;
+      transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
       position: relative;
       overflow: hidden;
       animation: fadeInUp 0.6s ease-out both;
@@ -291,35 +299,36 @@ const GamesPage: React.FC = () => {
     .game-card:nth-child(4) { animation-delay: 0.7s; }
 
     .game-card:hover {
-      transform: translateY(-12px) scale(1.02);
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+      transform: translateY(-10px) scale(1.04);
+      box-shadow: 0 260px 600px rgba(300, 42, 74, 0.18);
+      border-color: rgba(255, 255, 255, 0.9);
     }
 
     .game-card::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 10px;
-      background: linear-gradient(90deg, var(--color1), var(--color2));
-      border-radius: 28px 28px 0 0;
+      inset: 1px;
+      border-radius: 29px;
+      background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.15), transparent 40%),
+        radial-gradient(circle at 80% 0%, rgba(255, 255, 255, 0.12), transparent 35%);
+      pointer-events: none;
+      z-index: 0;
     }
 
     .game-card::after {
       content: '';
       position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
-      opacity: 0;
-      transition: opacity 0.4s;
+      inset: 0;
+      border-radius: 30px;
+      background: linear-gradient(135deg, var(--color1), var(--color2));
+      opacity: 0.12;
+      filter: blur(30px);
+      z-index: 0;
+      transition: opacity 0.35s ease;
     }
 
     .game-card:hover::after {
-      opacity: 1;
+      opacity: 0.22;
     }
 
     .game-level {
@@ -369,6 +378,49 @@ const GamesPage: React.FC = () => {
       font-family: 'Fredoka One', 'Comic Sans MS', sans-serif;
       position: relative;
       z-index: 1;
+    }
+
+    .game-visual {
+      width: 200px;
+      height: 200px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(255,255,255,0.6));
+      box-shadow: inset 0 8px 20px rgba(0, 0, 0, 0.08), 0 10px 24px rgba(0, 0, 0, 0.1);
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      position: relative;
+      transition: transform 0.35s ease;
+    }
+
+    .game-visual::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(145deg, rgba(255,255,255,0.15), transparent);
+      pointer-events: none;
+    }
+
+    .game-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.35s ease;
+    }
+
+    .game-icon {
+      font-size: 5rem;
+      z-index: 1;
+      animation: bounce 2s ease-in-out infinite;
+    }
+
+    .game-card:hover .game-visual {
+      transform: scale(1.05);
+    }
+
+    .game-card:hover .game-image {
+      transform: scale(1.08);
     }
 
     .play-button {
@@ -654,6 +706,13 @@ const GamesPage: React.FC = () => {
                 <div className="game-level">{game.level}</div>
                 <div className="game-title-box">
                   <div className="game-title-text">{game.title}</div>
+                </div>
+                <div className="game-visual">
+                  {game.image ? (
+                    <img src={game.image} alt={`${game.title} preview`} className="game-image" />
+                  ) : (
+                    <span className="game-icon">{game.icon}</span>
+                  )}
                 </div>
                 <button
                   type="button"
