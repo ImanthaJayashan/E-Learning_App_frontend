@@ -24,6 +24,20 @@ type SliceTrail = {
 
 const COLORS = ["#ff7675", "#74b9ff", "#55efc4", "#ffeaa7"];
 
+const SHAPE_ICONS: { [key in ShapeType]: string } = {
+  circle: "⭕",
+  square: "🟦",
+  triangle: "🔺",
+  star: "⭐",
+};
+
+const SHAPE_NAMES: { [key in ShapeType]: string } = {
+  circle: "CIRCLE",
+  square: "SQUARE",
+  triangle: "TRIANGLE",
+  star: "STAR",
+};
+
 const ShapeNinja: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const shapes = useRef<Shape[]>([]);
@@ -32,6 +46,8 @@ const ShapeNinja: React.FC = () => {
   const backgroundImageRef = useRef<HTMLImageElement | null>(null);
 
   const [score, setScore] = useState(0);
+  const [gameStarted, setGameStarted] = useState(false);
+  const [targetShape, setTargetShape] = useState<ShapeType>("circle");
 
   /* ---------- FULL SCREEN ---------- */
   useEffect(() => {
@@ -131,8 +147,11 @@ const ShapeNinja: React.FC = () => {
           mouse.current.slicing &&
           Math.hypot(mouse.current.x - s.x, mouse.current.y - s.y) < s.size
         ) {
-          s.alive = false;
-          setScore((prev) => prev + 1);
+          // Only count if it's the target shape
+          if (s.type === targetShape) {
+            s.alive = false;
+            setScore((prev) => prev + 1);
+          }
         }
       });
 
@@ -259,24 +278,209 @@ const ShapeNinja: React.FC = () => {
 
   return (
     <>
+      {/* START SCREEN / RULES */}
+      {!gameStarted && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            padding: "2rem",
+          }}
+        >
+          <h1
+            style={{
+              color: "white",
+              fontSize: "3.5rem",
+              marginBottom: "2rem",
+              textShadow: "3px 3px 6px rgba(0,0,0,0.3)",
+              fontFamily: "'Fredoka One', 'Comic Sans MS', sans-serif",
+            }}
+          >
+            🥷 Ninja Slicer Rules
+          </h1>
+
+          <div
+            style={{
+              background: "rgba(255, 255, 255, 0.95)",
+              borderRadius: "30px",
+              padding: "3rem 2rem",
+              maxWidth: "600px",
+              textAlign: "center",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
+            }}
+          >
+            <p
+              style={{
+                fontSize: "1.5rem",
+                fontWeight: "bold",
+                color: "#333",
+                marginBottom: "2rem",
+                fontFamily: "'Fredoka One', 'Comic Sans MS', sans-serif",
+              }}
+            >
+              👇 Click and Slice ONLY the {SHAPE_ICONS[targetShape]} {SHAPE_NAMES[targetShape]} shapes!
+            </p>
+
+            <div
+              style={{
+                display: "flex",
+                gap: "1rem",
+                justifyContent: "center",
+                alignItems: "center",
+                marginBottom: "2rem",
+              }}
+            >
+              {["circle", "square", "triangle", "star"].map((shape) => (
+                <div
+                  key={shape}
+                  style={{
+                    padding: "1rem",
+                    borderRadius: "15px",
+                    background: targetShape === shape ? "#FFD700" : "#f0f0f0",
+                    border: targetShape === shape ? "4px solid #FFA500" : "2px solid #ccc",
+                    fontSize: "3rem",
+                    opacity: targetShape === shape ? 1 : 0.5,
+                    transform: targetShape === shape ? "scale(1.1)" : "scale(1)",
+                  }}
+                >
+                  {SHAPE_ICONS[shape as ShapeType]}
+                </div>
+              ))}
+            </div>
+
+            <div
+              style={{
+                background: "#f5f5f5",
+                borderRadius: "15px",
+                padding: "2rem",
+                marginBottom: "2rem",
+                textAlign: "left",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: "1.1rem",
+                  color: "#555",
+                  marginBottom: "1rem",
+                  fontFamily: "'Nunito', sans-serif",
+                }}
+              >
+                📋 <strong>How to Play:</strong>
+              </p>
+              <ul
+                style={{
+                  fontSize: "1rem",
+                  color: "#666",
+                  marginLeft: "2rem",
+                  fontFamily: "'Nunito', sans-serif",
+                }}
+              >
+                <li>✨ Shapes will float across the screen</li>
+                <li>🎯 Click and drag to slice shapes</li>
+                <li>⭐ Only slice the {SHAPE_NAMES[targetShape]} - other shapes don't count!</li>
+                <li>🧠 Stay focused and be quick!</li>
+                <li>🎉 Get more points for correct shapes</li>
+              </ul>
+            </div>
+
+            <button
+              onClick={() => setGameStarted(true)}
+              style={{
+                padding: "1.2rem 3rem",
+                fontSize: "1.5rem",
+                fontWeight: "bold",
+                background: "linear-gradient(135deg, #FFD700, #FFA500)",
+                color: "#333",
+                border: "none",
+                borderRadius: "30px",
+                cursor: "pointer",
+                fontFamily: "'Fredoka One', 'Comic Sans MS', sans-serif",
+                boxShadow: "0 8px 20px rgba(255, 165, 0, 0.4)",
+                transition: "all 0.3s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "scale(1.05)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "scale(1)";
+              }}
+            >
+              🚀 START GAME
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* SCORE */}
-      <div
-        style={{
-          position: "fixed",
-          top: 20,
-          left: 20,
-          color: "#000",
-          fontSize: 22,
-          fontWeight: "bold",
-          zIndex: 10,
-        }}
-      >
-        Score: {score}
-      </div>
+      {gameStarted && (
+        <div
+          style={{
+            position: "fixed",
+            top: 20,
+            left: 20,
+            color: "#000",
+            fontSize: 22,
+            fontWeight: "bold",
+            zIndex: 10,
+            background: "rgba(255, 255, 255, 0.9)",
+            padding: "1rem 1.5rem",
+            borderRadius: "15px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+          }}
+        >
+          Score: {score}
+        </div>
+      )}
+
+      {/* TARGET INDICATOR */}
+      {gameStarted && (
+        <div
+          style={{
+            position: "fixed",
+            top: 20,
+            right: 20,
+            background: "rgba(255, 255, 255, 0.95)",
+            padding: "1rem 2rem",
+            borderRadius: "20px",
+            boxShadow: "0 8px 25px rgba(0,0,0,0.2)",
+            textAlign: "center",
+            zIndex: 10,
+            border: "3px solid #FFD700",
+          }}
+        >
+          <p
+            style={{
+              fontSize: "0.9rem",
+              color: "#666",
+              margin: "0 0 0.5rem 0",
+              fontWeight: "bold",
+            }}
+          >
+            SLICE THIS:
+          </p>
+          <p
+            style={{
+              fontSize: "3rem",
+              margin: "0",
+            }}
+          >
+            {SHAPE_ICONS[targetShape]}
+          </p>
+        </div>
+      )}
 
       <canvas
         ref={canvasRef}
-        style={{ background: "#ffffff" }} // WHITE SCREEN
+        style={{ background: "#ffffff", display: gameStarted ? "block" : "none" }}
         onMouseDown={() => (mouse.current.slicing = true)}
         onMouseUp={() => (mouse.current.slicing = false)}
         onMouseMove={(e) => movePointer(e.clientX, e.clientY)}
