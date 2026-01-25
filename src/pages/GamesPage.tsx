@@ -43,11 +43,11 @@ const GamesPage: React.FC = () => {
       icon: "⭕"
     },
     {
-      title: "SQUARE",
+      title: "Ninja",
       level: "LEVEL 2",
       color1: "#FF4444",
       color2: "#4444FF",
-      route: "/shapes/square",
+      route: "/games/ninjagame",
       icon: "🟦"
     },
     {
