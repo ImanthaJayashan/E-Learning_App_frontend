@@ -14,12 +14,16 @@ type Vehicle = {
 const AmbloCar: React.FC = () => {
   const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const [score, setScore] = useState(0);
   const [time, setTime] = useState(0);
   const [paused, setPaused] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [gameWon, setGameWon] = useState(false);
+  const [musicPlaying, setMusicPlaying] = useState(true);
+  const [level, setLevel] = useState(1);
+  const [showLevelComplete, setShowLevelComplete] = useState(false);
 
   const size = useRef({ w: window.innerWidth, h: window.innerHeight });
 
@@ -30,12 +34,54 @@ const AmbloCar: React.FC = () => {
     height: 25,
   });
 
-  const vehicles = useRef<Vehicle[]>([
-    { x: 0, y: 140, width: 70, height: 24, speed: 2, color: "#FF6F6F", type: "car" },
-    { x: 400, y: 220, width: 110, height: 30, speed: -2.2, color: "#6FA8FF", type: "truck" },
-    { x: 0, y: 300, width: 75, height: 24, speed: 2.4, color: "#7ED957", type: "car" },
-    { x: 450, y: 380, width: 120, height: 32, speed: -2, color: "#FFB347", type: "truck" },
-  ]);
+  // Level configurations
+  const getLevelConfig = (lvl: number): Vehicle[] => {
+    switch (lvl) {
+      case 1:
+        return [
+          { x: 0, y: 140, width: 70, height: 24, speed: 2, color: "#FF6F6F", type: "car" },
+          { x: 400, y: 220, width: 110, height: 30, speed: -2.2, color: "#6FA8FF", type: "truck" },
+          { x: 0, y: 300, width: 75, height: 24, speed: 2.4, color: "#7ED957", type: "car" },
+          { x: 450, y: 380, width: 120, height: 32, speed: -2, color: "#FFB347", type: "truck" },
+        ];
+      case 2:
+        return [
+          { x: 0, y: 140, width: 70, height: 24, speed: 2.8, color: "#FF6F6F", type: "car" },
+          { x: 200, y: 140, width: 70, height: 24, speed: 2.8, color: "#FF3F3F", type: "car" },
+          { x: 400, y: 200, width: 110, height: 30, speed: -3, color: "#6FA8FF", type: "truck" },
+          { x: 0, y: 260, width: 75, height: 24, speed: 3.2, color: "#7ED957", type: "car" },
+          { x: 450, y: 340, width: 120, height: 32, speed: -2.8, color: "#FFB347", type: "truck" },
+          { x: 100, y: 400, width: 75, height: 24, speed: 3, color: "#9F7ED9", type: "car" },
+        ];
+      case 3:
+        return [
+          { x: 0, y: 140, width: 70, height: 24, speed: 3.5, color: "#FF6F6F", type: "car" },
+          { x: 150, y: 140, width: 70, height: 24, speed: 3.5, color: "#FF3F3F", type: "car" },
+          { x: 300, y: 140, width: 70, height: 24, speed: 3.5, color: "#FF0F0F", type: "car" },
+          { x: 400, y: 200, width: 110, height: 30, speed: -3.5, color: "#6FA8FF", type: "truck" },
+          { x: 0, y: 260, width: 75, height: 24, speed: 4, color: "#7ED957", type: "car" },
+          { x: 200, y: 260, width: 75, height: 24, speed: 4, color: "#5EB937", type: "car" },
+          { x: 450, y: 320, width: 120, height: 32, speed: -3.2, color: "#FFB347", type: "truck" },
+          { x: 0, y: 380, width: 75, height: 24, speed: 3.8, color: "#9F7ED9", type: "car" },
+        ];
+      default:
+        // Endless mode - super hard
+        return [
+          { x: 0, y: 140, width: 70, height: 24, speed: 4, color: "#FF6F6F", type: "car" },
+          { x: 120, y: 140, width: 70, height: 24, speed: 4, color: "#FF3F3F", type: "car" },
+          { x: 240, y: 140, width: 70, height: 24, speed: 4, color: "#FF0F0F", type: "car" },
+          { x: 400, y: 200, width: 110, height: 30, speed: -4.5, color: "#6FA8FF", type: "truck" },
+          { x: 200, y: 200, width: 110, height: 30, speed: -4.5, color: "#4F88DF", type: "truck" },
+          { x: 0, y: 260, width: 75, height: 24, speed: 5, color: "#7ED957", type: "car" },
+          { x: 150, y: 260, width: 75, height: 24, speed: 5, color: "#5EB937", type: "car" },
+          { x: 450, y: 320, width: 120, height: 32, speed: -4, color: "#FFB347", type: "truck" },
+          { x: 0, y: 380, width: 75, height: 24, speed: 4.5, color: "#9F7ED9", type: "car" },
+          { x: 180, y: 380, width: 75, height: 24, speed: 4.5, color: "#7F5EB9", type: "car" },
+        ];
+    }
+  };
+
+  const vehicles = useRef<Vehicle[]>(getLevelConfig(1));
 
   /* ---------------- TIMER ---------------- */
   useEffect(() => {
@@ -47,6 +93,41 @@ const AmbloCar: React.FC = () => {
 
     return () => clearInterval(timer);
   }, [paused, gameOver, gameWon]);
+
+  /* ---------------- BACKGROUND MUSIC ---------------- */
+  useEffect(() => {
+    // Create audio element
+    const audio = new Audio();
+    audio.src = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"; // Free background music
+    audio.loop = true;
+    audio.volume = 0.3;
+    audioRef.current = audio;
+
+    // Start playing when game starts
+    if (musicPlaying && !gameOver && !gameWon) {
+      audio.play().catch((e) => console.log("Audio play failed:", e));
+    }
+
+    return () => {
+      audio.pause();
+      audio.currentTime = 0;
+    };
+  }, []);
+
+  // Control music based on game state
+  useEffect(() => {
+    if (!audioRef.current) return;
+
+    if (musicPlaying && !paused && !gameOver && !gameWon) {
+      audioRef.current.play().catch((e) => console.log("Audio play failed:", e));
+    } else {
+      audioRef.current.pause();
+    }
+  }, [musicPlaying, paused, gameOver, gameWon]);
+
+  const toggleMusic = () => {
+    setMusicPlaying(!musicPlaying);
+  };
 
   /* ---------------- GAME ---------------- */
   useEffect(() => {
@@ -139,6 +220,8 @@ const AmbloCar: React.FC = () => {
 
       if (man.current.y < 100) {
         setGameWon(true);
+        setShowLevelComplete(true);
+        setScore((s) => s + 100 * level); // Bonus points based on level
       }
 
       animationId = requestAnimationFrame(update);
@@ -170,7 +253,20 @@ const AmbloCar: React.FC = () => {
     setTime(0);
     setGameOver(false);
     setGameWon(false);
+    setShowLevelComplete(false);
     setPaused(false);
+    setLevel(1);
+    vehicles.current = getLevelConfig(1);
+    man.current.y = size.current.h - 80;
+  };
+
+  const nextLevel = () => {
+    const newLevel = level + 1;
+    setLevel(newLevel);
+    setGameWon(false);
+    setShowLevelComplete(false);
+    setPaused(false);
+    vehicles.current = getLevelConfig(newLevel);
     man.current.y = size.current.h - 80;
   };
 
@@ -181,6 +277,8 @@ const AmbloCar: React.FC = () => {
       {/* TOP LEFT - SCORE */}
       <div style={uiBox("left")}>
         🏆 Score: {score}
+        <br />
+        🎯 Level: {level}
       </div>
 
       {/* TOP RIGHT - TIME + PAUSE */}
@@ -189,6 +287,10 @@ const AmbloCar: React.FC = () => {
         <br />
         <button onClick={() => setPaused((p) => !p)} style={btnStyle}>
           {paused ? "▶ Resume" : "⏸ Pause"}
+        </button>
+        <br />
+        <button onClick={toggleMusic} style={btnStyle}>
+          {musicPlaying ? "🔊 Music On" : "🔇 Music Off"}
         </button>
       </div>
 
@@ -212,11 +314,22 @@ const AmbloCar: React.FC = () => {
       {/* GAME WON */}
       {gameWon && (
         <div style={gameWonStyle}>
-          <h1>🎉 YOU WON!</h1>
+          <h1>🎉 LEVEL {level} COMPLETE!</h1>
           <p>Congratulations! You made it across safely!</p>
           <p>⏱ Time: {time}s</p>
+          <p>🏆 Score: {score}</p>
           <div style={{ marginTop: 20, display: "flex", gap: 10, justifyContent: "center" }}>
-            <button onClick={resetGame} style={btnStyle}>🔁 Play Again</button>
+            {level < 3 ? (
+              <button onClick={nextLevel} style={btnStyle}>➡️ Next Level</button>
+            ) : (
+              <div style={{ textAlign: "center" }}>
+                <p style={{ fontWeight: "bold", color: "#22c55e" }}>
+                  🏆 All Levels Complete! You're a champion!
+                </p>
+                <button onClick={nextLevel} style={btnStyle}>🔥 Try Endless Mode</button>
+              </div>
+            )}
+            <button onClick={resetGame} style={btnStyle}>🔁 Restart Game</button>
             <button onClick={() => navigate("/games")} style={btnStyle}>🏠 Back to Games</button>
           </div>
         </div>
