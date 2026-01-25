@@ -26,6 +26,8 @@ const AmbloCar: React.FC = () => {
   const [showLevelComplete, setShowLevelComplete] = useState(false);
 
   const size = useRef({ w: window.innerWidth, h: window.innerHeight });
+  // Lane positions kept inside the white road area (top buffer 160px, bottom buffer 160px)
+  const laneY = [200, 270, 340, 410, 480];
 
   const man = useRef({
     x: 0,
@@ -33,50 +35,52 @@ const AmbloCar: React.FC = () => {
     width: 20,
     height: 25,
   });
+  const manStep = useRef(false);
 
   // Level configurations
   const getLevelConfig = (lvl: number): Vehicle[] => {
     switch (lvl) {
       case 1:
         return [
-          { x: 0, y: 140, width: 70, height: 24, speed: 2, color: "#FF6F6F", type: "car" },
-          { x: 400, y: 220, width: 110, height: 30, speed: -2.2, color: "#6FA8FF", type: "truck" },
-          { x: 0, y: 300, width: 75, height: 24, speed: 2.4, color: "#7ED957", type: "car" },
-          { x: 450, y: 380, width: 120, height: 32, speed: -2, color: "#FFB347", type: "truck" },
+          { x: 400, y: laneY[1], width: 70, height: 24, speed: 2, color: "#FF6F6F", type: "car" },
+          { x: 0, y: laneY[0], width: 110, height: 30, speed: -2.2, color: "#6FA8FF", type: "truck" },
+          { x: 0, y: laneY[2], width: 75, height: 24, speed: 2.4, color: "#7ED957", type: "car" },
+          { x: 450, y: laneY[3], width: 120, height: 32, speed: -2, color: "#FF6F6F", type: "truck" },
+          { x: 500, y: laneY[4], width: 120, height: 32, speed: -2, color: "#FF6F6F", type: "truck" }
         ];
       case 2:
         return [
-          { x: 0, y: 140, width: 70, height: 24, speed: 2.8, color: "#FF6F6F", type: "car" },
-          { x: 200, y: 140, width: 70, height: 24, speed: 2.8, color: "#FF3F3F", type: "car" },
-          { x: 400, y: 200, width: 110, height: 30, speed: -3, color: "#6FA8FF", type: "truck" },
-          { x: 0, y: 260, width: 75, height: 24, speed: 3.2, color: "#7ED957", type: "car" },
-          { x: 450, y: 340, width: 120, height: 32, speed: -2.8, color: "#FFB347", type: "truck" },
-          { x: 100, y: 400, width: 75, height: 24, speed: 3, color: "#9F7ED9", type: "car" },
+          { x: 0, y: laneY[0], width: 70, height: 24, speed: 2.8, color: "#7ED957", type: "car" },
+          { x: 200, y: laneY[0], width: 70, height: 24, speed: 2.8, color: "#9F7ED9", type: "car" },
+          { x: 400, y: laneY[1], width: 110, height: 30, speed: -3, color: "#FF6F6F", type: "truck" },
+          { x: 0, y: laneY[2], width: 75, height: 24, speed: 3.2, color: "#7ED957", type: "car" },
+          { x: 450, y: laneY[3], width: 120, height: 32, speed: -2.8, color: "#FFB347", type: "truck" },
+          { x: 100, y: laneY[4], width: 75, height: 24, speed: 3, color: "#FF6F6F", type: "car" },
         ];
       case 3:
         return [
-          { x: 0, y: 140, width: 70, height: 24, speed: 3.5, color: "#FF6F6F", type: "car" },
-          { x: 150, y: 140, width: 70, height: 24, speed: 3.5, color: "#FF3F3F", type: "car" },
-          { x: 300, y: 140, width: 70, height: 24, speed: 3.5, color: "#FF0F0F", type: "car" },
-          { x: 400, y: 200, width: 110, height: 30, speed: -3.5, color: "#6FA8FF", type: "truck" },
-          { x: 0, y: 260, width: 75, height: 24, speed: 4, color: "#7ED957", type: "car" },
-          { x: 200, y: 260, width: 75, height: 24, speed: 4, color: "#5EB937", type: "car" },
-          { x: 450, y: 320, width: 120, height: 32, speed: -3.2, color: "#FFB347", type: "truck" },
-          { x: 0, y: 380, width: 75, height: 24, speed: 3.8, color: "#9F7ED9", type: "car" },
+          { x: 0, y: laneY[0], width: 70, height: 24, speed: 3.5, color: "#7ED957", type: "car" },
+          { x: 150, y: laneY[0], width: 70, height: 24, speed: 3.5, color: "#FF6F6F", type: "car" },
+          { x: 300, y: laneY[0], width: 70, height: 24, speed: 3.5, color: "#9F7ED9", type: "car" },
+          { x: 400, y: laneY[1], width: 110, height: 30, speed: -3.5, color: "#6FA8FF", type: "truck" },
+          { x: 0, y: laneY[2], width: 75, height: 24, speed: 4, color: "#7ED957", type: "car" },
+          { x: 200, y: laneY[2], width: 75, height: 24, speed: 4, color: "#FF6F6F", type: "car" },
+          { x: 450, y: laneY[3], width: 120, height: 32, speed: -3.2, color: "#FFB347", type: "truck" },
+          { x: 0, y: laneY[4], width: 75, height: 24, speed: 3.8, color: "#9F7ED9", type: "car" },
         ];
       default:
         // Endless mode - super hard
         return [
-          { x: 0, y: 140, width: 70, height: 24, speed: 4, color: "#FF6F6F", type: "car" },
-          { x: 120, y: 140, width: 70, height: 24, speed: 4, color: "#FF3F3F", type: "car" },
-          { x: 240, y: 140, width: 70, height: 24, speed: 4, color: "#FF0F0F", type: "car" },
-          { x: 400, y: 200, width: 110, height: 30, speed: -4.5, color: "#6FA8FF", type: "truck" },
-          { x: 200, y: 200, width: 110, height: 30, speed: -4.5, color: "#4F88DF", type: "truck" },
-          { x: 0, y: 260, width: 75, height: 24, speed: 5, color: "#7ED957", type: "car" },
-          { x: 150, y: 260, width: 75, height: 24, speed: 5, color: "#5EB937", type: "car" },
-          { x: 450, y: 320, width: 120, height: 32, speed: -4, color: "#FFB347", type: "truck" },
-          { x: 0, y: 380, width: 75, height: 24, speed: 4.5, color: "#9F7ED9", type: "car" },
-          { x: 180, y: 380, width: 75, height: 24, speed: 4.5, color: "#7F5EB9", type: "car" },
+          { x: 0, y: laneY[0], width: 70, height: 24, speed: 4, color: "#FF6F6F", type: "car" },
+          { x: 120, y: laneY[0], width: 70, height: 24, speed: 4, color: "#FF6F6F", type: "car" },
+          { x: 240, y: laneY[0], width: 70, height: 24, speed: 4, color: "#FF6F6F", type: "car" },
+          { x: 400, y: laneY[1], width: 110, height: 30, speed: -4.5, color: "#6FA8FF", type: "truck" },
+          { x: 200, y: laneY[1], width: 110, height: 30, speed: -4.5, color: "#4F88DF", type: "truck" },
+          { x: 0, y: laneY[2], width: 75, height: 24, speed: 5, color: "#7ED957", type: "car" },
+          { x: 150, y: laneY[2], width: 75, height: 24, speed: 5, color: "#5EB937", type: "car" },
+          { x: 450, y: laneY[3], width: 120, height: 32, speed: -4, color: "#FFB347", type: "truck" },
+          { x: 0, y: laneY[4], width: 75, height: 24, speed: 4.5, color: "#9F7ED9", type: "car" },
+          { x: 180, y: laneY[4], width: 75, height: 24, speed: 4.5, color: "#7F5EB9", type: "car" },
         ];
     }
   };
@@ -168,11 +172,45 @@ const AmbloCar: React.FC = () => {
     };
 
     const drawMan = () => {
-      ctx.fillStyle = "#444";
+      const baseX = man.current.x + 10;
+      const baseY = man.current.y + 6;
+
+      // Head
+      ctx.fillStyle = "#ffe0b2";
       ctx.beginPath();
-      ctx.arc(man.current.x + 10, man.current.y + 6, 5, 0, Math.PI * 2);
+      ctx.arc(baseX, baseY, 6, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillRect(man.current.x + 7, man.current.y + 12, 6, 13);
+
+      // Body
+      ctx.fillStyle = "#2563eb";
+      ctx.fillRect(baseX - 6, baseY + 4, 12, 14);
+
+      // Arms
+      ctx.strokeStyle = "#2563eb";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(baseX - 6, baseY + 8);
+      ctx.lineTo(baseX - 12, baseY + 12);
+      ctx.moveTo(baseX + 6, baseY + 8);
+      ctx.lineTo(baseX + 12, baseY + 12);
+      ctx.stroke();
+
+      // Legs (alternate for simple walking animation)
+      ctx.strokeStyle = "#111827";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      if (manStep.current) {
+        ctx.moveTo(baseX - 3, baseY + 18);
+        ctx.lineTo(baseX - 8, baseY + 26);
+        ctx.moveTo(baseX + 3, baseY + 18);
+        ctx.lineTo(baseX + 10, baseY + 24);
+      } else {
+        ctx.moveTo(baseX - 3, baseY + 18);
+        ctx.lineTo(baseX - 10, baseY + 24);
+        ctx.moveTo(baseX + 3, baseY + 18);
+        ctx.lineTo(baseX + 8, baseY + 26);
+      }
+      ctx.stroke();
     };
 
     const drawVehicle = (v: Vehicle) => {
@@ -232,8 +270,19 @@ const AmbloCar: React.FC = () => {
     const handleKey = (e: KeyboardEvent) => {
       if (paused || gameOver || gameWon) return;
 
-      if (e.key === "ArrowUp") man.current.y -= 25;
-      if (e.key === "ArrowDown") man.current.y += 25;
+      let moved = false;
+      if (e.key === "ArrowUp") {
+        man.current.y -= 25;
+        moved = true;
+      }
+      if (e.key === "ArrowDown") {
+        man.current.y += 25;
+        moved = true;
+      }
+
+      if (moved) {
+        manStep.current = !manStep.current;
+      }
 
       man.current.y = Math.max(50, Math.min(man.current.y, size.current.h - 80));
     };
@@ -258,6 +307,7 @@ const AmbloCar: React.FC = () => {
     setLevel(1);
     vehicles.current = getLevelConfig(1);
     man.current.y = size.current.h - 80;
+    manStep.current = false;
   };
 
   const nextLevel = () => {
@@ -268,6 +318,7 @@ const AmbloCar: React.FC = () => {
     setPaused(false);
     vehicles.current = getLevelConfig(newLevel);
     man.current.y = size.current.h - 80;
+    manStep.current = false;
   };
 
   return (
