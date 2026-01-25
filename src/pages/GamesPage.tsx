@@ -8,6 +8,7 @@ const GamesPage: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingGame, setLoadingGame] = useState("");
+  const [selectedGame, setSelectedGame] = useState<{ title: string; icon: string; color1: string; color2: string } | null>(null);
 
   const sliderImages = [
     "/games_tablet_02.jpg",
@@ -23,13 +24,19 @@ const GamesPage: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const handlePlayGame = (route: string, gameTitle: string) => {
-    setIsLoading(true);
-    setLoadingGame(gameTitle);
+  const handlePlayGame = (route: string, gameTitle: string, color1: string, color2: string, icon: string) => {
+    // First show selection square
+    setSelectedGame({ title: gameTitle, icon, color1, color2 });
     
+    // Then navigate after delay
     setTimeout(() => {
-      navigate(route);
-    }, 1500); // Show loading animation for 1.5 seconds
+      setIsLoading(true);
+      setLoadingGame(gameTitle);
+      
+      setTimeout(() => {
+        navigate(route);
+      }, 1500);
+    }, 800); // Show selection square for 800ms
   };
 
   const games = [
@@ -625,12 +632,77 @@ const GamesPage: React.FC = () => {
       <style>{styles}</style>
       <Navbar />
       
+      {/* SELECTION SQUARE CONTAINER */}
+      {selectedGame && !isLoading && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            background: "rgba(0, 0, 0, 0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 5000,
+            animation: "fadeInUp 0.3s ease-out",
+          }}
+        >
+          <div
+            style={{
+              background: `linear-gradient(135deg, ${selectedGame.color1}, ${selectedGame.color2})`,
+              borderRadius: "40px",
+              padding: "4rem 3rem",
+              textAlign: "center",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.4)",
+              transform: "scale(1)",
+              animation: "pulse 0.5s ease-out",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "6rem",
+                marginBottom: "1.5rem",
+                animation: "bounce 1s ease-in-out infinite",
+              }}
+            >
+              {selectedGame.icon}
+            </div>
+            <h2
+              style={{
+                color: "white",
+                fontSize: "3rem",
+                fontWeight: "900",
+                margin: "1rem 0",
+                textShadow: "3px 3px 6px rgba(0,0,0,0.3)",
+                fontFamily: "'Fredoka One', 'Comic Sans MS', sans-serif",
+                letterSpacing: "2px",
+              }}
+            >
+              {selectedGame.title}
+            </h2>
+            <p
+              style={{
+                color: "white",
+                fontSize: "1.3rem",
+                fontWeight: "600",
+                textShadow: "2px 2px 4px rgba(0,0,0,0.3)",
+                fontFamily: "'Nunito', sans-serif",
+              }}
+            >
+              ✨ Get Ready! ✨
+            </p>
+          </div>
+        </div>
+      )}
+      
       {isLoading && (
         <div className="loading-overlay">
           <div className="loading-content">
             <div className="loading-game-icon">
-              {loadingGame === "CIRCLE" && "⭕"}
-              {loadingGame === "SQUARE" && "🟦"}
+              {loadingGame === "AmbloCar" && "⭕"}
+              {loadingGame === "Ninja" && "🟦"}
               {loadingGame === "TRIANGLE" && "🔺"}
               {loadingGame === "STAR" && "⭐"}
             </div>
@@ -696,7 +768,7 @@ const GamesPage: React.FC = () => {
               <div 
                 key={index} 
                 className="game-card"
-                onClick={() => handlePlayGame(game.route, game.title)}
+                onClick={() => handlePlayGame(game.route, game.title, game.color1, game.color2, game.icon)}
                 style={{
                   '--color1': game.color1,
                   '--color2': game.color2,
@@ -719,7 +791,7 @@ const GamesPage: React.FC = () => {
                   className="play-button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handlePlayGame(game.route, game.title);
+                    handlePlayGame(game.route, game.title, game.color1, game.color2, game.icon);
                   }}
                 >
                   PLAY
