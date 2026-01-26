@@ -46,7 +46,7 @@ const GamesPage: React.FC = () => {
       color1: "#FF4444",
       color2: "#4444FF",
       route: "/games/amblocar",
-      image: "/688abcca075993afaacd3536_Amblyoplay%201.png",
+      image: "/ablocar.png",
       icon: "⭕"
     },
     {
@@ -55,6 +55,7 @@ const GamesPage: React.FC = () => {
       color1: "#FF4444",
       color2: "#4444FF",
       route: "/games/ninjagame",
+      image: "/ninja.png",
       icon: "🟦"
     },
     {
