@@ -21,9 +21,10 @@ const AmbloCar: React.FC = () => {
   const [paused, setPaused] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [gameWon, setGameWon] = useState(false);
-  const [musicPlaying, setMusicPlaying] = useState(true);
+  const [musicPlaying, setMusicPlaying] = useState(false);
   const [level, setLevel] = useState(1);
   const [showLevelComplete, setShowLevelComplete] = useState(false);
+  const [audioInitialized, setAudioInitialized] = useState(false);
 
   const size = useRef({ w: window.innerWidth, h: window.innerHeight });
   // Lane positions kept inside the white road area (top buffer 160px, bottom buffer 160px)
@@ -107,10 +108,7 @@ const AmbloCar: React.FC = () => {
     audio.volume = 0.3;
     audioRef.current = audio;
 
-    // Start playing when game starts
-    if (musicPlaying && !gameOver && !gameWon) {
-      audio.play().catch((e) => console.log("Audio play failed:", e));
-    }
+    // Don't auto-play - wait for user interaction
 
     return () => {
       audio.pause();
@@ -130,7 +128,16 @@ const AmbloCar: React.FC = () => {
   }, [musicPlaying, paused, gameOver, gameWon]);
 
   const toggleMusic = () => {
-    setMusicPlaying(!musicPlaying);
+    if (!audioRef.current) return;
+    
+    if (musicPlaying) {
+      audioRef.current.pause();
+      setMusicPlaying(false);
+    } else {
+      audioRef.current.play().catch((e) => console.log("Audio play failed:", e));
+      setMusicPlaying(true);
+      setAudioInitialized(true);
+    }
   };
 
   /* ---------------- GAME ---------------- */
