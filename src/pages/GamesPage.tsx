@@ -56,7 +56,7 @@ const GamesPage: React.FC = () => {
       color2: "#4444FF",
       route: "/games/ninjagame",
       image: "/ninja.png",
-      icon: "🟦"
+      icon: "🗡️"
     },
     {
       title: "TRIANGLE",
@@ -703,7 +703,7 @@ const GamesPage: React.FC = () => {
           <div className="loading-content">
             <div className="loading-game-icon">
               {loadingGame === "AmbloCar" && "🚗"}
-              {loadingGame === "Ninja" }
+              {loadingGame === "Ninja" && "🗡️"}
               {loadingGame === "TRIANGLE" && "🔺"}
               {loadingGame === "STAR" && "⭐"}
             </div>
