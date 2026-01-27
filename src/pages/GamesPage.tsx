@@ -63,16 +63,8 @@ const GamesPage: React.FC = () => {
       level: "LEVEL 3",
       color1: "#FF4444",
       color2: "#4444FF",
-      route: "/shapes/triangle",
+      route: "/games/snakegame",
       icon: "🔺"
-    },
-    {
-      title: "STAR",
-      level: "LEVEL 4",
-      color1: "#FF4444",
-      color2: "#4444FF",
-      route: "/shapes/star",
-      icon: "⭐"
     }
   ];
 
