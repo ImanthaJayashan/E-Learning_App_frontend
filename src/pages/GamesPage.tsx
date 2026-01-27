@@ -47,7 +47,7 @@ const GamesPage: React.FC = () => {
       color2: "#4444FF",
       route: "/games/amblocar",
       image: "/ablocar.png",
-      icon: "⭕"
+      icon: "🚗"
     },
     {
       title: "Ninja",
@@ -702,8 +702,8 @@ const GamesPage: React.FC = () => {
         <div className="loading-overlay">
           <div className="loading-content">
             <div className="loading-game-icon">
-              {loadingGame === "AmbloCar" && "⭕"}
-              {loadingGame === "Ninja" && "🟦"}
+              {loadingGame === "AmbloCar" && "🚗"}
+              {loadingGame === "Ninja" }
               {loadingGame === "TRIANGLE" && "🔺"}
               {loadingGame === "STAR" && "⭐"}
             </div>
