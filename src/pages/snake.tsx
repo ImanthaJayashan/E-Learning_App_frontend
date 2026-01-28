@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const CELL_SIZE = 20;
 
@@ -11,6 +12,7 @@ const randomShape = (): ShapeType => {
 };
 
 const SnakeGame: React.FC = () => {
+  const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const [cols, setCols] = useState(0);
@@ -299,6 +301,32 @@ const SnakeGame: React.FC = () => {
           fontSize: "1.2rem",
         }}
       >
+        <button
+          onClick={() => navigate("/games")}
+          style={{
+            padding: "0.6rem 1.2rem",
+            fontSize: "1rem",
+            fontWeight: "bold",
+            background: "rgba(255, 255, 255, 0.2)",
+            color: "white",
+            border: "2px solid rgba(255, 255, 255, 0.4)",
+            borderRadius: "15px",
+            cursor: "pointer",
+            fontFamily: "'Fredoka One', 'Comic Sans MS', sans-serif",
+            transition: "all 0.3s ease",
+            backdropFilter: "blur(10px)",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "rgba(255, 255, 255, 0.3)";
+            e.currentTarget.style.transform = "scale(1.05)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "rgba(255, 255, 255, 0.2)";
+            e.currentTarget.style.transform = "scale(1)";
+          }}
+        >
+          🏠 Home
+        </button>
         <div>🐍 Score: {score}</div>
         <div>⏱️ Time: {time}s</div>
         <button
