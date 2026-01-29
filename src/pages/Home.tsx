@@ -49,6 +49,23 @@ const Home: React.FC = () => {
         >
           <button
             type="button"
+            aria-label="Vision Therapy"
+            onClick={() => navigate("/vision-therapy")}
+            style={{
+              ...buttonBase,
+              background: "#3b82f6",
+              color: "#fff",
+              border: "1px solid #3b82f6",
+            }}
+          >
+            <strong>👁️ Vision Therapy</strong>
+            <div style={{ marginTop: 6, fontSize: 13, color: "#e0e7ff" }}>
+              Interactive 3D vision exercises for eye health.
+            </div>
+          </button>
+
+          <button
+            type="button"
             aria-label="Eye Problem Detector"
             onClick={() => navigate("/eye-problem-detector")}
             style={buttonBase}
