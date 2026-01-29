@@ -64,7 +64,8 @@ const GamesPage: React.FC = () => {
       color1: "#FF4444",
       color2: "#4444FF",
       route: "/games/snakegame",
-      icon: "🔺"
+      image: "/snake.png",
+      icon: "🐍"
     }
   ];
 
@@ -696,8 +697,7 @@ const GamesPage: React.FC = () => {
             <div className="loading-game-icon">
               {loadingGame === "AmbloCar" && "🚗"}
               {loadingGame === "Ninja" && "🗡️"}
-              {loadingGame === "TRIANGLE" && "🔺"}
-              {loadingGame === "STAR" && "⭐"}
+              {loadingGame === "TRIANGLE" && "🐍"}
             </div>
             <div className="loading-spinner"></div>
             <div className="loading-text">
