@@ -10,25 +10,25 @@ const Home: React.FC = () => {
   const games = [
     {
       title: "NUMBERS",
-      image: "https://images.unsplash.com/photo-1632778149955-e80f8ceca2e8?w=300&h=200&fit=crop",
+      image: "numbers.jpg",
       color: "#8B4513",
       route: "/games/numbers"
     },
     {
       title: "COLORS",
-      image: "https://images.unsplash.com/photo-1452421822248-d4c2b47f0c81?w=300&h=200&fit=crop",
+      image: "colors.png",
       color: "#228B22",
       route: "/games/colors"
     },
     {
       title: "LETTERS",
-      image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=300&h=200&fit=crop",
+      image: "letters.png",
       color: "#1E3A8A",
       route: "/games/letters"
     },
     {
       title: "SHAPES",
-      image: "https://images.unsplash.com/photo-1509228468518-180dd4864904?w=300&h=200&fit=crop",
+      image: "shapes.png",
       color: "#7C3AED",
       route: "/vision-therapy"
     }
