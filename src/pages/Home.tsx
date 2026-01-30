@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import HeroSection from "../components/HeroSection";
@@ -6,6 +6,7 @@ import Footer from "../components/Footer";
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
 
   const games = [
     {
@@ -30,7 +31,7 @@ const Home: React.FC = () => {
       title: "SHAPES",
       image: "shapes.png",
       color: "#7C3AED",
-      route: "/vision-therapy"
+      route: "/eye-problem-detector"
     }
   ];
 
@@ -59,6 +60,81 @@ const Home: React.FC = () => {
 
   return (
     <div>
+      {isLoading && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            background: "rgba(0, 0, 0, 0.8)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+            animation: "fadeIn 0.3s ease-out",
+          }}
+        >
+          <style>{`
+            @keyframes fadeIn {
+              from { opacity: 0; }
+              to { opacity: 1; }
+            }
+            @keyframes spin {
+              from { transform: rotate(0deg); }
+              to { transform: rotate(360deg); }
+            }
+            @keyframes pulse {
+              0%, 100% { opacity: 1; }
+              50% { opacity: 0.5; }
+            }
+          `}</style>
+          
+          <div
+            style={{
+              fontSize: "4rem",
+              marginBottom: "2rem",
+              animation: "spin 1s linear infinite",
+            }}
+          >
+            🔍
+          </div>
+
+          <h2
+            style={{
+              color: "white",
+              fontSize: "2rem",
+              fontWeight: "bold",
+              margin: "0 0 1rem 0",
+              fontFamily: "'Fredoka One', 'Comic Sans MS', sans-serif",
+            }}
+          >
+            Detecting Eye Health...
+          </h2>
+
+          <div
+            style={{
+              display: "flex",
+              gap: "0.5rem",
+            }}
+          >
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                style={{
+                  width: "12px",
+                  height: "12px",
+                  borderRadius: "50%",
+                  background: "#7C3AED",
+                  animation: `pulse 1.4s ease-in-out ${i * 0.2}s infinite`,
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
       <Navbar />
       <HeroSection />
 
@@ -74,7 +150,14 @@ const Home: React.FC = () => {
               <button 
                 className="game-play-btn"
                 style={{ backgroundColor: game.color }}
-                onClick={() => navigate(game.route)}
+                onClick={() => {
+                  if (game.title === "SHAPES") {
+                    setIsLoading(true);
+                    setTimeout(() => navigate(game.route), 1500);
+                  } else {
+                    navigate(game.route);
+                  }
+                }}
               >
                 PLAY
               </button>
