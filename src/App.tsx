@@ -11,6 +11,7 @@ import StarShape from "./pages/StarShape";
 import ShapeNinja from "./pages/ninjagame";
 import AmbloCar from "./pages/AmbloCar";
 import SnakeGame from "./pages/snake";
+import ParentsDashboard from "./pages/ParentsDashboard";
 
 const App: React.FC = () => (
   <Routes>
@@ -25,6 +26,7 @@ const App: React.FC = () => (
     <Route path="/shapes/square" element={<SquareShape />} />
     <Route path="/shapes/triangle" element={<TriangleShape />} />
     <Route path="/shapes/star" element={<StarShape />} />
+    <Route path="/parents-dashboard" element={<ParentsDashboard />} />
   </Routes>
 );
 

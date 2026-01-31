@@ -1,7 +1,9 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Navbar: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
     <nav className="navbar">
       <div className="navbar-inner" style={{ backgroundColor: "#E4E5E5", color: "white" }}>
@@ -22,6 +24,14 @@ const Navbar: React.FC = () => {
           </ul>
 
           <button type="button" className="nav-cta">Sign Up</button>
+          <button 
+            type="button" 
+            className="nav-cta" 
+            style={{ marginLeft: "10px", backgroundColor: "red" }}
+            onClick={() => navigate("/parents-dashboard")}
+          >
+            Parents Dashboard
+          </button>
         </div>
       </div>
     </nav>
