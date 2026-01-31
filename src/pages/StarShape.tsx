@@ -11,10 +11,27 @@ import Button from '@mui/material/Button';
 import CardActionArea from '@mui/material/CardActionArea';
 import CardActions from '@mui/material/CardActions';
 
+const trackLearningTime = (timeKey: string, countKey: string, lastVisitKey: string) => {
+  const start = Date.now();
+  const nowIso = new Date().toISOString();
+  const currentCount = Number(localStorage.getItem(countKey) || "0");
+  localStorage.setItem(countKey, String(currentCount + 1));
+  localStorage.setItem(lastVisitKey, nowIso);
+  localStorage.setItem("learningLastUpdated", nowIso);
+  return () => {
+    const elapsedMs = Date.now() - start;
+    const existing = Number(localStorage.getItem(timeKey) || "0");
+    localStorage.setItem(timeKey, String(existing + elapsedMs));
+    localStorage.setItem("learningLastUpdated", new Date().toISOString());
+  };
+};
+
 const StarShape: React.FC = () => {
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
   const [show3DCircle, setShow3DCircle] = useState(false);
+
+  useEffect(() => trackLearningTime("learningTime_star", "learningVisits_star", "learningLastVisit_star"), []);
   
   // Preschool Game State
   const gameCanvasRef = useRef<HTMLCanvasElement>(null);
