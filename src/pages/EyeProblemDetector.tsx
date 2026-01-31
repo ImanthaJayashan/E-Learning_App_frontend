@@ -1,4 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  attachVideoElement,
+  startEyeTracking,
+  stopEyeTracking,
+  subscribeEyeTracking,
+} from "../services/eyeTracking";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -7,6 +13,29 @@ import { motion } from "framer-motion";
 const EyeProblemDetector: React.FC = () => {
   const [gameStarted, setGameStarted] = useState(false);
   const navigate = useNavigate();
+  const [isTracking, setIsTracking] = useState(false);
+  const [trackingStatus, setTrackingStatus] = useState("Idle");
+  const [latestResult, setLatestResult] = useState<any>(null);
+  const [trackingError, setTrackingError] = useState<string | null>(null);
+
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = subscribeEyeTracking((state: any) => {
+      setIsTracking(state.isTracking);
+      setTrackingStatus(state.status);
+      setLatestResult(state.latestResult);
+      setTrackingError(state.error);
+    });
+
+    attachVideoElement(videoRef.current);
+    startEyeTracking();
+
+    return () => {
+      unsubscribe();
+      attachVideoElement(null);
+    };
+  }, []);
 
   const handleShapeNavigate = (shapeName: string) => {
     const shapeSlug = shapeName.toLowerCase();
@@ -683,8 +712,56 @@ const EyeProblemDetector: React.FC = () => {
               viewport={{ once: false, margin: "0px", amount: 0.3 }}
               whileHover={{ y: -10, boxShadow: '0 20px 50px rgba(0,0,0,0.2)', scale: 1.03 }}
             >
-              <h3>🚀 Next: add your flow</h3>
-              <p>Plug in your camera or API later. Show a fun progress bar and a happy chime.</p>
+              <h3>👁️ Real-time Eye Tracking</h3>
+              <p>Start the camera to run live eye detection. Results are sent to the Parents Dashboard.</p>
+
+              <div style={{ display: "grid", gap: "12px", marginTop: "12px" }}>
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  style={{ width: "100%", borderRadius: "12px", background: "#000" }}
+                />
+
+                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                  <button
+                    type="button"
+                    className="eye-btn"
+                    onClick={startEyeTracking}
+                    disabled={isTracking}
+                  >
+                    {isTracking ? "Tracking..." : "Start Tracking"}
+                  </button>
+                  <button
+                    type="button"
+                    className="eye-btn ghost"
+                    onClick={stopEyeTracking}
+                    disabled={!isTracking}
+                  >
+                    Stop
+                  </button>
+                </div>
+
+                <div style={{ fontSize: "0.9rem" }}>
+                  <strong>Status:</strong> {trackingStatus}
+                  {trackingError && (
+                    <div style={{ color: "#ef4444", marginTop: "6px" }}>{trackingError}</div>
+                  )}
+                </div>
+
+                {latestResult && (
+                  <div style={{ background: "rgba(255,255,255,0.6)", padding: "10px", borderRadius: "10px" }}>
+                    <div><strong>Label:</strong> {latestResult.label}</div>
+                    <div><strong>Confidence:</strong> {(latestResult.confidence * 100).toFixed(1)}%</div>
+                    {latestResult.is_uncertain && (
+                      <div style={{ color: "#b45309" }}>
+                        <strong>Note:</strong> {latestResult.uncertainty_reason}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </motion.div>
           </motion.section>
         </main>

@@ -1,9 +1,48 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
 const ParentsDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"eye" | "writing" | "reading" | "auditory" | "insights" | "detailed">("eye");
+  const [latestEyeResult, setLatestEyeResult] = useState<any>(null);
+  const [eyeStatus, setEyeStatus] = useState("Waiting for detection...");
+
+  const apiBase = (import.meta as any).env?.VITE_BACKEND_URL?.replace(/\/$/, "") || "";
+  const latestUrl = apiBase ? `${apiBase}/latest` : "/api/latest";
+
+  useEffect(() => {
+    if (activeTab !== "eye") return;
+
+    let isMounted = true;
+    const fetchLatest = async () => {
+      try {
+        const res = await fetch(latestUrl, { cache: "no-store" });
+        if (!res.ok) throw new Error("No data");
+        const data = await res.json();
+        if (!isMounted) return;
+        setLatestEyeResult(data);
+        setEyeStatus("Live updates");
+      } catch {
+        if (!isMounted) return;
+        const cached = localStorage.getItem("latestEyeDetection");
+        if (cached) {
+          setLatestEyeResult(JSON.parse(cached));
+          setEyeStatus("Local cache");
+        } else {
+          setLatestEyeResult(null);
+          setEyeStatus("Waiting for detection...");
+        }
+      }
+    };
+
+    fetchLatest();
+    const id = window.setInterval(fetchLatest, 5000);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(id);
+    };
+  }, [activeTab, latestUrl]);
 
   const StatCard = ({ icon, title, value, change, color }: any) => (
     <div style={{
@@ -183,6 +222,56 @@ const ParentsDashboard: React.FC = () => {
             )}
           </div>
         </div>
+
+        {activeTab === "eye" && (
+          <div style={{
+            background: "white",
+            borderRadius: "16px",
+            padding: "24px",
+            marginBottom: "40px",
+            boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
+            border: "1px solid #e5e7eb"
+          }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+              <h3 style={{ margin: 0, fontSize: "1.3rem", color: "#1f2937" }}>Latest Eye Detection</h3>
+              <span style={{ fontSize: "0.85rem", color: "#6b7280" }}>{eyeStatus}</span>
+            </div>
+
+            {latestEyeResult ? (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px" }}>
+                <div>
+                  <div style={{ color: "#6b7280", fontSize: "0.85rem" }}>Label</div>
+                  <div style={{ fontSize: "1.2rem", fontWeight: 700, color: "#0284c7" }}>{latestEyeResult.label}</div>
+                </div>
+                <div>
+                  <div style={{ color: "#6b7280", fontSize: "0.85rem" }}>Confidence</div>
+                  <div style={{ fontSize: "1.2rem", fontWeight: 700 }}>{(latestEyeResult.confidence * 100).toFixed(1)}%</div>
+                </div>
+                <div>
+                  <div style={{ color: "#6b7280", fontSize: "0.85rem" }}>Lazy Eye Score</div>
+                  <div style={{ fontSize: "1.2rem", fontWeight: 700 }}>{
+                    latestEyeResult.lazy_eye_confidence !== null && latestEyeResult.lazy_eye_confidence !== undefined
+                      ? `${(latestEyeResult.lazy_eye_confidence * 100).toFixed(1)}%`
+                      : "N/A"
+                  }</div>
+                </div>
+                <div>
+                  <div style={{ color: "#6b7280", fontSize: "0.85rem" }}>Timestamp</div>
+                  <div style={{ fontSize: "1rem", fontWeight: 600 }}>
+                    {latestEyeResult.timestamp ? new Date(latestEyeResult.timestamp).toLocaleString() : "N/A"}
+                  </div>
+                </div>
+                {latestEyeResult.is_uncertain && (
+                  <div style={{ gridColumn: "1 / -1", color: "#b45309", fontWeight: 600 }}>
+                    ⚠️ {latestEyeResult.uncertainty_reason || "Uncertain result"}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div style={{ color: "#6b7280" }}>No eye detection results yet. Start tracking on the Eye Problem Detector page.</div>
+            )}
+          </div>
+        )}
 
         {/* Tabs Navigation - Assessment Categories */}
         <div style={{
