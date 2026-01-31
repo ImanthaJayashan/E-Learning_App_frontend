@@ -3,7 +3,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
 const ParentsDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<"overview" | "detailed" | "insights">("overview");
+  const [activeTab, setActiveTab] = useState<"eye" | "writing" | "reading" | "auditory">("eye");
 
   const StatCard = ({ icon, title, value, change, color }: any) => (
     <div style={{
@@ -126,7 +126,7 @@ const ParentsDashboard: React.FC = () => {
 
       {/* Main Content */}
       <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "40px 20px" }}>
-        {/* Quick Stats */}
+        {/* Quick Stats - Changes based on active tab */}
         <div style={{ marginBottom: "50px" }}>
           <h2 style={{
             fontSize: "1.8rem",
@@ -134,31 +134,70 @@ const ParentsDashboard: React.FC = () => {
             color: "#1f2937",
             marginBottom: "24px"
           }}>
-            Quick Overview
+            Quick Overview - {
+              activeTab === "eye" ? "👁️ Eye Health & Vision" :
+              activeTab === "writing" ? "✏️ Writing Issues" :
+              activeTab === "reading" ? "📖 Reading & Speech" :
+              "👂 Auditory Response"
+            }
           </h2>
           <div style={{
             display: "grid",
             gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
             gap: "20px"
           }}>
-            <StatCard icon="📚" title="Learning Time" value="8.5h" change={12} color="#667eea" />
-            <StatCard icon="👁️" title="Eye Health" value="Excellent" change={8} color="#10b981" />
-            <StatCard icon="🎮" title="Games Completed" value="12" change={25} color="#f59e0b" />
-            <StatCard icon="🏆" title="Total Points" value="2,450" change={18} color="#ec4899" />
+            {activeTab === "eye" && (
+              <>
+                <StatCard icon="👁️" title="Eye Health Status" value="Excellent" change={8} color="#0284c7" />
+                <StatCard icon="🎯" title="Vision Therapy Progress" value="9/21 Days" change={15} color="#f59e0b" />
+                <StatCard icon="📋" title="Latest Check-up" value="Today" change={0} color="#10b981" />
+                <StatCard icon="🏥" title="Overall Assessment" value="Healthy" change={5} color="#10b981" />
+              </>
+            )}
+
+            {activeTab === "writing" && (
+              <>
+                <StatCard icon="✏️" title="Writing Skills" value="Good" change={12} color="#f59e0b" />
+                <StatCard icon="🖊️" title="Handwriting Score" value="85%" change={10} color="#667eea" />
+                <StatCard icon="📝" title="Practice Sessions" value="24" change={18} color="#ec4899" />
+                <StatCard icon="⭐" title="Improvement Rate" value="9%" change={7} color="#10b981" />
+              </>
+            )}
+
+            {activeTab === "reading" && (
+              <>
+                <StatCard icon="📖" title="Reading Level" value="Advanced" change={12} color="#0284c7" />
+                <StatCard icon="🗣️" title="Speech Clarity" value="95%" change={8} color="#10b981" />
+                <StatCard icon="📚" title="Books Completed" value="18" change={22} color="#667eea" />
+                <StatCard icon="🎯" title="Comprehension" value="92%" change={14} color="#ec4899" />
+              </>
+            )}
+
+            {activeTab === "auditory" && (
+              <>
+                <StatCard icon="👂" title="Hearing Assessment" value="Normal" change={0} color="#8b5cf6" />
+                <StatCard icon="🔊" title="Sound Recognition" value="90%" change={11} color="#0284c7" />
+                <StatCard icon="🎵" title="Listening Skills" value="Excellent" change={9} color="#10b981" />
+                <StatCard icon="⚡" title="Response Time" value="Fast" change={6} color="#f59e0b" />
+              </>
+            )}
           </div>
         </div>
 
-        {/* Tabs Navigation */}
+        {/* Tabs Navigation - Assessment Categories */}
         <div style={{
           display: "flex",
           gap: "12px",
           marginBottom: "30px",
-          borderBottom: "2px solid #e5e7eb"
+          borderBottom: "2px solid #e5e7eb",
+          overflowX: "auto",
+          paddingBottom: "10px"
         }}>
           {[
-            { id: "overview", label: "📊 Overview" },
-            { id: "detailed", label: "🔍 Detailed Report" },
-            { id: "insights", label: "💡 Insights" }
+            { id: "eye", label: "👁️ Eye Health & Vision" },
+            { id: "writing", label: "✏️ Writing Issues" },
+            { id: "reading", label: "📖 Reading & Speech" },
+            { id: "auditory", label: "👂 Auditory Response" }
           ].map(tab => (
             <button
               key={tab.id}
@@ -173,7 +212,8 @@ const ParentsDashboard: React.FC = () => {
                 borderBottom: activeTab === tab.id ? "3px solid #667eea" : "none",
                 cursor: "pointer",
                 transition: "all 0.3s ease",
-                marginBottom: "-2px"
+                marginBottom: "-2px",
+                whiteSpace: "nowrap"
               }}
             >
               {tab.label}
@@ -182,7 +222,7 @@ const ParentsDashboard: React.FC = () => {
         </div>
 
         {/* Content Based on Tab */}
-        {activeTab === "overview" && (
+        {activeTab === "eye" && (
           <div style={{
             display: "grid",
             gridTemplateColumns: "1fr 2fr",
@@ -265,6 +305,167 @@ const ParentsDashboard: React.FC = () => {
                   Last health check: 2 hours ago
                 </p>
               </div>
+
+              {/* Parent Details Card */}
+              <div style={{
+                background: "white",
+                padding: "24px",
+                borderRadius: "16px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.08)"
+              }}>
+                <h3 style={{
+                  fontSize: "1.2rem",
+                  fontWeight: "bold",
+                  color: "#1f2937",
+                  marginBottom: "16px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px"
+                }}>
+                  👨‍👩‍👧 Parent Details
+                </h3>
+
+                {/* Primary Parent */}
+                <div style={{
+                  backgroundColor: "#f3f4f6",
+                  padding: "14px",
+                  borderRadius: "10px",
+                  marginBottom: "14px",
+                  borderLeft: "4px solid #667eea"
+                }}>
+                  <p style={{
+                    margin: "0 0 8px 0",
+                    fontSize: "0.8rem",
+                    fontWeight: "bold",
+                    color: "#667eea",
+                    textTransform: "uppercase"
+                  }}>
+                    Primary Parent
+                  </p>
+                  <p style={{
+                    margin: "0 0 6px 0",
+                    fontSize: "1rem",
+                    fontWeight: "bold",
+                    color: "#333"
+                  }}>
+                    Sarah Johnson
+                  </p>
+                  <div style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "6px",
+                    fontSize: "0.85rem"
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#666" }}>
+                      <span>📧</span>
+                      <a href="mailto:sarah.johnson@email.com" style={{ color: "#667eea", textDecoration: "none" }}>
+                        sarah.johnson@email.com
+                      </a>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#666" }}>
+                      <span>📱</span>
+                      <a href="tel:+94712345678" style={{ color: "#667eea", textDecoration: "none" }}>
+                        +94 71 234 5678
+                      </a>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#666" }}>
+                      <span>🏠</span>
+                      <span>123 Flower Lane, Colombo 7</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Secondary Parent */}
+                <div style={{
+                  backgroundColor: "#f9fafb",
+                  padding: "14px",
+                  borderRadius: "10px",
+                  borderLeft: "4px solid #10b981"
+                }}>
+                  <p style={{
+                    margin: "0 0 8px 0",
+                    fontSize: "0.8rem",
+                    fontWeight: "bold",
+                    color: "#10b981",
+                    textTransform: "uppercase"
+                  }}>
+                    Secondary Parent
+                  </p>
+                  <p style={{
+                    margin: "0 0 6px 0",
+                    fontSize: "1rem",
+                    fontWeight: "bold",
+                    color: "#333"
+                  }}>
+                    Michael Johnson
+                  </p>
+                  <div style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "6px",
+                    fontSize: "0.85rem"
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#666" }}>
+                      <span>📧</span>
+                      <a href="mailto:michael.johnson@email.com" style={{ color: "#10b981", textDecoration: "none" }}>
+                        michael.johnson@email.com
+                      </a>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#666" }}>
+                      <span>📱</span>
+                      <a href="tel:+94771234567" style={{ color: "#10b981", textDecoration: "none" }}>
+                        +94 77 123 4567
+                      </a>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#666" }}>
+                      <span>🏠</span>
+                      <span>123 Flower Lane, Colombo 7</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Emergency Contact */}
+                <div style={{
+                  backgroundColor: "#fef2f2",
+                  padding: "12px",
+                  borderRadius: "10px",
+                  marginTop: "14px",
+                  border: "1px solid #fecaca"
+                }}>
+                  <p style={{
+                    margin: "0 0 8px 0",
+                    fontSize: "0.8rem",
+                    fontWeight: "bold",
+                    color: "#991b1b",
+                    textTransform: "uppercase",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px"
+                  }}>
+                    🚨 Emergency Contact
+                  </p>
+                  <p style={{
+                    margin: "0 0 6px 0",
+                    fontSize: "0.9rem",
+                    fontWeight: "bold",
+                    color: "#333"
+                  }}>
+                    Dr. Emma Watson (Pediatrician)
+                  </p>
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    color: "#666",
+                    fontSize: "0.85rem"
+                  }}>
+                    <span>📞</span>
+                    <a href="tel:+94761234567" style={{ color: "#ef4444", textDecoration: "none", fontWeight: "bold" }}>
+                      +94 76 123 4567
+                    </a>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Right: Detailed Sections */}
@@ -275,72 +476,444 @@ const ParentsDashboard: React.FC = () => {
             }}>
               {/* Eye Health Section */}
               <div style={{
-                background: "white",
-                padding: "24px",
+                background: "linear-gradient(135deg, #f0f9ff 0%, #dbeafe 100%)",
+                padding: "28px",
                 borderRadius: "16px",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.08)"
+                boxShadow: "0 4px 20px rgba(2, 132, 199, 0.12)",
+                border: "2px solid #0284c7"
               }}>
-                <h3 style={{
-                  fontSize: "1.3rem",
-                  fontWeight: "bold",
-                  color: "#1f2937",
-                  marginBottom: "20px",
+                <div style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "8px"
+                  justifyContent: "space-between",
+                  marginBottom: "24px"
                 }}>
-                  👁️ Eye Health & Vision
-                </h3>
-                <div style={{
-                  backgroundColor: "#f0f9ff",
-                  padding: "16px",
-                  borderRadius: "12px",
-                  borderLeft: "4px solid #0284c7",
-                  marginBottom: "16px"
-                }}>
-                  <p style={{ margin: "0", color: "#0c4a6e", fontSize: "0.95rem" }}>
-                    Vision coordination monitoring shows normal development pattern
-                  </p>
+                  <h3 style={{
+                    fontSize: "1.5rem",
+                    fontWeight: "900",
+                    color: "#0c4a6e",
+                    marginBottom: "0",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px"
+                  }}>
+                    <span style={{ fontSize: "2rem" }}>👁️</span> Eye Health & Vision
+                  </h3>
+                  <button style={{
+                    background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
+                    color: "white",
+                    border: "none",
+                    padding: "12px 20px",
+                    borderRadius: "8px",
+                    fontSize: "0.9rem",
+                    fontWeight: "bold",
+                    cursor: "pointer",
+                    transition: "all 0.3s ease",
+                    boxShadow: "0 2px 8px rgba(239, 68, 68, 0.2)"
+                  }} onMouseOver={e => {
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                    e.currentTarget.style.boxShadow = "0 4px 12px rgba(239, 68, 68, 0.3)";
+                  }} onMouseOut={e => {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = "0 2px 8px rgba(239, 68, 68, 0.2)";
+                  }}>
+                    📋 Schedule Check-up
+                  </button>
                 </div>
-                <ProgressBar label="Vision Sharpness" percentage={92} color="#0284c7" />
-                <ProgressBar label="Eye Coordination" percentage={88} color="#0284c7" />
-                <ProgressBar label="Focus Stability" percentage={90} color="#0284c7" />
 
                 <div style={{
-                  borderTop: "1px solid #e5e7eb",
-                  paddingTop: "16px",
-                  marginTop: "16px"
+                  backgroundColor: "rgba(255,255,255,0.9)",
+                  padding: "16px",
+                  borderRadius: "12px",
+                  borderLeft: "5px solid #0284c7",
+                  marginBottom: "20px",
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.05)"
+                }}>
+                  <p style={{ margin: "0", color: "#0c4a6e", fontSize: "0.95rem", fontWeight: "500" }}>
+                    ✨ Vision coordination monitoring shows <span style={{ fontWeight: "bold", color: "#10b981" }}>normal development pattern</span>
+                  </p>
+                </div>
+
+                {/* Quick View Eye Condition Type - Enhanced */}
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "16px",
+                  marginBottom: "24px"
+                }}>
+                  {/* Eye Condition Type */}
+                  <div style={{
+                    background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
+                    border: "3px solid #10b981",
+                    padding: "18px",
+                    borderRadius: "12px",
+                    textAlign: "center",
+                    boxShadow: "0 2px 8px rgba(16, 185, 129, 0.1)",
+                    transition: "all 0.3s ease"
+                  }}>
+                    <h4 style={{
+                      fontSize: "0.85rem",
+                      color: "#047857",
+                      margin: "0 0 12px 0",
+                      fontWeight: "700",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px"
+                    }}>
+                      Condition Type
+                    </h4>
+                    <p style={{
+                      fontSize: "1.5rem",
+                      fontWeight: "900",
+                      color: "#10b981",
+                      margin: "0",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "8px"
+                    }}>
+                      <span style={{ fontSize: "1.8rem" }}>✓</span> Normal
+                    </p>
+                  </div>
+
+                  {/* Overall Status */}
+                  <div style={{
+                    background: "linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)",
+                    border: "3px solid #0284c7",
+                    padding: "18px",
+                    borderRadius: "12px",
+                    textAlign: "center",
+                    boxShadow: "0 2px 8px rgba(2, 132, 199, 0.1)",
+                    transition: "all 0.3s ease"
+                  }}>
+                    <h4 style={{
+                      fontSize: "0.85rem",
+                      color: "#0c4a6e",
+                      margin: "0 0 12px 0",
+                      fontWeight: "700",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px"
+                    }}>
+                      Overall Status
+                    </h4>
+                    <p style={{
+                      fontSize: "1.5rem",
+                      fontWeight: "900",
+                      color: "#0284c7",
+                      margin: "0",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "8px"
+                    }}>
+                      <span style={{ fontSize: "1.8rem" }}>💪</span> Healthy
+                    </p>
+                  </div>
+                </div>
+
+                {/* Eye Checking Details with Time Periods - Enhanced */}
+                <div style={{
+                  background: "white",
+                  padding: "18px",
+                  borderRadius: "12px",
+                  marginBottom: "20px",
+                  border: "2px solid #e5e7eb",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.05)"
                 }}>
                   <h4 style={{
-                    fontSize: "0.95rem",
-                    fontWeight: "bold",
-                    color: "#1f2937",
-                    marginBottom: "12px"
+                    fontSize: "1.05rem",
+                    fontWeight: "900",
+                    color: "#0c4a6e",
+                    marginBottom: "14px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px"
                   }}>
-                    Condition Screening
+                    <span style={{ fontSize: "1.2rem" }}>📋</span> Eye Checking History
                   </h4>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    {[
+                      { check: "Last Eye Check", time: "Today, 10:30 AM", period: "✓ Current" },
+                      { check: "Previous Check", time: "Jan 30, 2:15 PM", period: "1 day ago" },
+                      { check: "Focus Test", time: "Jan 29, 9:00 AM", period: "2 days ago" },
+                      { check: "Vision Screening", time: "Jan 25, 3:45 PM", period: "1 week ago" }
+                    ].map((item, idx) => (
+                      <div key={idx} style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: "14px",
+                        backgroundColor: idx === 0 ? "#dbeafe" : "#f9fafb",
+                        borderRadius: "10px",
+                        borderLeft: idx === 0 ? "4px solid #0284c7" : "2px solid #e5e7eb",
+                        transition: "all 0.2s ease",
+                        border: idx === 0 ? "2px solid #0284c7" : "1px solid #e5e7eb"
+                      }}>
+                        <div>
+                          <p style={{ margin: "0", fontSize: "0.95rem", fontWeight: "700", color: "#1f2937" }}>
+                            {item.check}
+                          </p>
+                          <p style={{ margin: "6px 0 0 0", fontSize: "0.85rem", color: "#6b7280" }}>
+                            {item.time}
+                          </p>
+                        </div>
+                        <span style={{
+                          backgroundColor: idx === 0 ? "#0284c7" : "#f3f4f6",
+                          color: idx === 0 ? "white" : "#374151",
+                          padding: "8px 14px",
+                          borderRadius: "20px",
+                          fontSize: "0.8rem",
+                          fontWeight: "700",
+                          transition: "all 0.2s ease"
+                        }}>
+                          {item.period}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Vision Therapy Progress Section - Enhanced */}
+                <div style={{
+                  background: "linear-gradient(135deg, #fff5e6 0%, #fef3c7 100%)",
+                  padding: "20px",
+                  borderRadius: "12px",
+                  marginBottom: "20px",
+                  border: "3px solid #f59e0b",
+                  boxShadow: "0 4px 12px rgba(245, 158, 11, 0.15)"
+                }}>
+                  <h4 style={{
+                    fontSize: "1.1rem",
+                    fontWeight: "900",
+                    color: "#92400e",
+                    marginBottom: "16px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px"
+                  }}>
+                    <span style={{ fontSize: "1.3rem" }}>🎯</span> Vision Therapy Progress - Stage 1
+                  </h4>
+
+                  {/* Stage 1 Completion Progress - Enhanced */}
+                  <div style={{ marginBottom: "18px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", alignItems: "center" }}>
+                      <span style={{ fontSize: "0.95rem", fontWeight: "700", color: "#333" }}>Stage 1 Completion (21 Days)</span>
+                      <span style={{ 
+                        fontSize: "0.9rem", 
+                        fontWeight: "900", 
+                        color: "#f59e0b",
+                        backgroundColor: "#fff8e1",
+                        padding: "4px 12px",
+                        borderRadius: "20px"
+                      }}>
+                        9/21 Days
+                      </span>
+                    </div>
+                    <div style={{
+                      width: "100%",
+                      height: "14px",
+                      backgroundColor: "#fef3c7",
+                      borderRadius: "8px",
+                      overflow: "hidden",
+                      border: "1px solid #fbbf24"
+                    }}>
+                      <div style={{
+                        width: "43%",
+                        height: "100%",
+                        background: "linear-gradient(90deg, #f59e0b, #fbbf24, #fcd34d)",
+                        borderRadius: "8px",
+                        transition: "width 0.4s ease",
+                        boxShadow: "0 0 8px rgba(245, 158, 11, 0.3)"
+                      }} />
+                    </div>
+                  </div>
+
+                  {/* Sessions Done - Enhanced */}
                   <div style={{
                     display: "grid",
                     gridTemplateColumns: "1fr 1fr",
-                    gap: "12px"
+                    gap: "12px",
+                    marginBottom: "16px"
                   }}>
-                    {[
-                      { name: "Lazy Eye", status: "✓ Normal" },
-                      { name: "Misalignment", status: "✓ Normal" },
-                      { name: "Focus Issues", status: "✓ Normal" },
-                      { name: "Color Vision", status: "✓ Normal" }
-                    ].map((item, idx) => (
-                      <div key={idx} style={{
-                        backgroundColor: "#f0fdf4",
-                        padding: "10px",
-                        borderRadius: "8px",
-                        fontSize: "0.85rem"
-                      }}>
-                        <span style={{ color: "#333", fontWeight: "500" }}>{item.name}</span>
-                        <br />
-                        <span style={{ color: "#10b981", fontSize: "0.75rem", fontWeight: "bold" }}>{item.status}</span>
-                      </div>
-                    ))}
+                    <div style={{
+                      backgroundColor: "rgba(255,255,255,0.8)",
+                      padding: "14px",
+                      borderRadius: "10px",
+                      border: "2px solid #fcd34d"
+                    }}>
+                      <p style={{ margin: "0", fontSize: "0.85rem", color: "#92400e", fontWeight: "700", textTransform: "uppercase" }}>Total Sessions</p>
+                      <p style={{ margin: "8px 0 0 0", fontSize: "1.5rem", fontWeight: "900", color: "#f59e0b" }}>9 Sessions</p>
+                    </div>
+                    <div style={{
+                      backgroundColor: "rgba(255,255,255,0.8)",
+                      padding: "14px",
+                      borderRadius: "10px",
+                      border: "2px solid #10b981",
+                      background: "linear-gradient(135deg, #f0fdf4 0%, #dbeafe 100%)"
+                    }}>
+                      <p style={{ margin: "0", fontSize: "0.85rem", color: "#047857", fontWeight: "700", textTransform: "uppercase" }}>Next Session</p>
+                      <p style={{ margin: "8px 0 0 0", fontSize: "1.4rem", fontWeight: "900", color: "#10b981" }}>📅 Feb 1</p>
+                      <p style={{ margin: "2px 0 0 0", fontSize: "0.8rem", color: "#059669" }}>2:00 PM</p>
+                    </div>
+                  </div>
+
+                  {/* Recent Session History - Enhanced */}
+                  <div style={{
+                    marginBottom: "14px",
+                    borderTop: "2px solid #fbbf24",
+                    paddingTop: "12px"
+                  }}>
+                    <p style={{ margin: "0 0 10px 0", fontSize: "0.9rem", fontWeight: "900", color: "#92400e" }}>
+                      ⏱️ Last 5 Sessions:
+                    </p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                      {[
+                        { session: "Session 9", date: "Jan 31, 3:30 PM", duration: "15 min" },
+                        { session: "Session 8", date: "Jan 30, 2:00 PM", duration: "15 min" },
+                        { session: "Session 7", date: "Jan 29, 3:45 PM", duration: "15 min" },
+                        { session: "Session 6", date: "Jan 28, 2:15 PM", duration: "15 min" },
+                        { session: "Session 5", date: "Jan 27, 4:00 PM", duration: "15 min" }
+                      ].map((item, idx) => (
+                        <div key={idx} style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          fontSize: "0.9rem",
+                          padding: "10px",
+                          backgroundColor: "rgba(255,255,255,0.5)",
+                          borderRadius: "8px",
+                          transition: "all 0.2s ease",
+                          border: "1px solid rgba(255,255,255,0.8)"
+                        }}>
+                          <div>
+                            <span style={{ fontWeight: "700", color: "#333" }}>{item.session}</span>
+                            <span style={{ color: "#666", marginLeft: "10px" }}>• {item.date}</span>
+                          </div>
+                          <span style={{ color: "#f59e0b", fontWeight: "900", fontSize: "0.95rem" }}>⏱️ {item.duration}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Recommended Weekly Schedule - Enhanced */}
+                  <div style={{
+                    backgroundColor: "white",
+                    border: "2px solid #0284c7",
+                    padding: "16px",
+                    borderRadius: "10px",
+                    marginTop: "14px",
+                    boxShadow: "0 2px 6px rgba(2, 132, 199, 0.1)"
+                  }}>
+                    <p style={{
+                      margin: "0 0 12px 0",
+                      fontSize: "0.95rem",
+                      fontWeight: "900",
+                      color: "#0c4a6e",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px"
+                    }}>
+                      <span style={{ fontSize: "1.1rem" }}>📅</span> Recommended Weekly Schedule
+                    </p>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "10px", marginBottom: "12px" }}>
+                      {[
+                        { week: "Week 1", time: "5 min", status: "Completed ✓" },
+                        { week: "Week 2", time: "10 min", status: "In Progress" },
+                        { week: "Week 3", time: "15 min", status: "Upcoming" },
+                        { week: "Week 4", time: "20 min", status: "Upcoming" },
+                        { week: "Week 5 & Beyond", time: "25 min", status: "Upcoming" }
+                      ].map((item, idx) => {
+                        let bgColor = "#dbeafe";
+                        let textColor = "#0c4a6e";
+                        let statusColor = "#0284c7";
+                        let statusBg = "#e0f2fe";
+                        
+                        if (item.status === "Completed ✓") {
+                          bgColor = "#dbeafe";
+                          statusColor = "#10b981";
+                          statusBg = "#dcfce7";
+                        } else if (item.status === "In Progress") {
+                          bgColor = "#fef3c7";
+                          statusColor = "#f59e0b";
+                          statusBg = "#fef3c7";
+                        } else {
+                          bgColor = "#f3f4f6";
+                          statusColor = "#9ca3af";
+                          statusBg = "#f3f4f6";
+                        }
+                        
+                        return (
+                          <div key={idx} style={{
+                            backgroundColor: bgColor,
+                            padding: "12px",
+                            borderRadius: "10px",
+                            fontSize: "0.85rem",
+                            border: `2px solid ${statusColor}`,
+                            transition: "all 0.3s ease"
+                          }}>
+                            <p style={{ margin: "0 0 6px 0", fontWeight: "900", color: "#1f2937", fontSize: "0.9rem" }}>
+                              {item.week}
+                            </p>
+                            <p style={{ margin: "0 0 8px 0", fontSize: "0.8rem", color: "#666" }}>
+                              ⏱️ <span style={{ fontWeight: "bold", color: "#0284c7" }}>{item.time}</span>
+                            </p>
+                            <span style={{
+                              display: "inline-block",
+                              backgroundColor: statusBg,
+                              color: statusColor,
+                              padding: "4px 10px",
+                              borderRadius: "6px",
+                              fontSize: "0.75rem",
+                              fontWeight: "900"
+                            }}>
+                              {item.status}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <p style={{
+                      margin: "0",
+                      fontSize: "0.8rem",
+                      color: "#0c4a6e",
+                      fontStyle: "italic",
+                      backgroundColor: "#f0f9ff",
+                      padding: "10px",
+                      borderRadius: "6px",
+                      border: "1px solid #bfdbfe"
+                    }}>
+                      💡 Gradually increase therapy duration by 5 minutes each week for better eye muscle adaptation
+                    </p>
+                  </div>
+
+                  {/* Doctor's Advice - Enhanced */}
+                  <div style={{
+                    background: "linear-gradient(135deg, #fef2f2 0%, #fecaca 100%)",
+                    border: "3px solid #ef4444",
+                    padding: "16px",
+                    borderRadius: "10px",
+                    marginTop: "14px",
+                    boxShadow: "0 2px 6px rgba(239, 68, 68, 0.15)"
+                  }}>
+                    <p style={{
+                      margin: "0 0 10px 0",
+                      fontSize: "0.95rem",
+                      fontWeight: "900",
+                      color: "#991b1b",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px"
+                    }}>
+                      <span style={{ fontSize: "1.2rem" }}>👨‍⚕️</span> Doctor's Advice Required
+                    </p>
+                    <p style={{
+                      margin: "0",
+                      fontSize: "0.85rem",
+                      color: "#7f1d1d",
+                      lineHeight: "1.5",
+                      fontWeight: "500"
+                    }}>
+                      Please consult with your child's eye doctor after completing Stage 1 (21 days) to assess progress and adjust the therapy plan if needed.
+                    </p>
                   </div>
                 </div>
 
@@ -526,6 +1099,264 @@ const ParentsDashboard: React.FC = () => {
                 <li style={{ marginBottom: "12px" }}>👥 Join group learning sessions</li>
                 <li>🏆 Work towards "Perfect Week" badge</li>
               </ul>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "writing" && (
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 2fr",
+            gap: "30px"
+          }}>
+            {/* Left Sidebar */}
+            <div style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "24px"
+            }}>
+              {/* Profile Card */}
+              <div style={{
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                color: "white",
+                padding: "30px",
+                borderRadius: "16px",
+                textAlign: "center",
+                boxShadow: "0 8px 24px rgba(102, 126, 234, 0.3)"
+              }}>
+                <div style={{
+                  width: "80px",
+                  height: "80px",
+                  background: "rgba(255,255,255,0.2)",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "2.5rem",
+                  margin: "0 auto 16px"
+                }}>
+                  👧
+                </div>
+                <h2 style={{ fontSize: "1.8rem", margin: "0 0 8px 0", fontFamily: "'Fredoka One', sans-serif" }}>Emma</h2>
+                <p style={{ fontSize: "1rem", opacity: "0.9", margin: "0 0 16px 0" }}>Age 5 years old</p>
+                <div style={{
+                  backgroundColor: "rgba(255,255,255,0.2)",
+                  padding: "12px",
+                  borderRadius: "12px",
+                  fontSize: "0.9rem"
+                }}>
+                  📍 Grade: Pre-School | 🎯 Level: Advanced
+                </div>
+              </div>
+            </div>
+
+            {/* Right Content */}
+            <div style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "24px"
+            }}>
+              {/* Writing Issues Section */}
+              <div style={{
+                background: "linear-gradient(135deg, #fff5e6 0%, #fef3c7 100%)",
+                padding: "28px",
+                borderRadius: "16px",
+                boxShadow: "0 4px 20px rgba(245, 158, 11, 0.12)",
+                border: "2px solid #f59e0b"
+              }}>
+                <h3 style={{
+                  fontSize: "1.5rem",
+                  fontWeight: "900",
+                  color: "#92400e",
+                  marginBottom: "16px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px"
+                }}>
+                  <span style={{ fontSize: "2rem" }}>✏️</span> Writing Issues Assessment
+                </h3>
+                <p style={{
+                  margin: "0",
+                  color: "#92400e",
+                  fontSize: "0.95rem",
+                  fontWeight: "500",
+                  lineHeight: "1.6"
+                }}>
+                  Comprehensive evaluation of your child's writing skills and development. Track improvements in handwriting, letter formation, spelling, and creative expression.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "reading" && (
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 2fr",
+            gap: "30px"
+          }}>
+            {/* Left Sidebar */}
+            <div style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "24px"
+            }}>
+              {/* Profile Card */}
+              <div style={{
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                color: "white",
+                padding: "30px",
+                borderRadius: "16px",
+                textAlign: "center",
+                boxShadow: "0 8px 24px rgba(102, 126, 234, 0.3)"
+              }}>
+                <div style={{
+                  width: "80px",
+                  height: "80px",
+                  background: "rgba(255,255,255,0.2)",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "2.5rem",
+                  margin: "0 auto 16px"
+                }}>
+                  👧
+                </div>
+                <h2 style={{ fontSize: "1.8rem", margin: "0 0 8px 0", fontFamily: "'Fredoka One', sans-serif" }}>Emma</h2>
+                <p style={{ fontSize: "1rem", opacity: "0.9", margin: "0 0 16px 0" }}>Age 5 years old</p>
+                <div style={{
+                  backgroundColor: "rgba(255,255,255,0.2)",
+                  padding: "12px",
+                  borderRadius: "12px",
+                  fontSize: "0.9rem"
+                }}>
+                  📍 Grade: Pre-School | 🎯 Level: Advanced
+                </div>
+              </div>
+            </div>
+
+            {/* Right Content */}
+            <div style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "24px"
+            }}>
+              {/* Reading & Speech Section */}
+              <div style={{
+                background: "linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)",
+                padding: "28px",
+                borderRadius: "16px",
+                boxShadow: "0 4px 20px rgba(2, 132, 199, 0.12)",
+                border: "2px solid #0284c7"
+              }}>
+                <h3 style={{
+                  fontSize: "1.5rem",
+                  fontWeight: "900",
+                  color: "#0c4a6e",
+                  marginBottom: "16px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px"
+                }}>
+                  <span style={{ fontSize: "2rem" }}>📖</span> Reading & Speech Assessment
+                </h3>
+                <p style={{
+                  margin: "0",
+                  color: "#0c4a6e",
+                  fontSize: "0.95rem",
+                  fontWeight: "500",
+                  lineHeight: "1.6"
+                }}>
+                  Monitor your child's reading ability and speech development progress. Track phonemic awareness, decoding skills, fluency, and articulation improvements.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "auditory" && (
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 2fr",
+            gap: "30px"
+          }}>
+            {/* Left Sidebar */}
+            <div style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "24px"
+            }}>
+              {/* Profile Card */}
+              <div style={{
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                color: "white",
+                padding: "30px",
+                borderRadius: "16px",
+                textAlign: "center",
+                boxShadow: "0 8px 24px rgba(102, 126, 234, 0.3)"
+              }}>
+                <div style={{
+                  width: "80px",
+                  height: "80px",
+                  background: "rgba(255,255,255,0.2)",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "2.5rem",
+                  margin: "0 auto 16px"
+                }}>
+                  👧
+                </div>
+                <h2 style={{ fontSize: "1.8rem", margin: "0 0 8px 0", fontFamily: "'Fredoka One', sans-serif" }}>Emma</h2>
+                <p style={{ fontSize: "1rem", opacity: "0.9", margin: "0 0 16px 0" }}>Age 5 years old</p>
+                <div style={{
+                  backgroundColor: "rgba(255,255,255,0.2)",
+                  padding: "12px",
+                  borderRadius: "12px",
+                  fontSize: "0.9rem"
+                }}>
+                  📍 Grade: Pre-School | 🎯 Level: Advanced
+                </div>
+              </div>
+            </div>
+
+            {/* Right Content */}
+            <div style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "24px"
+            }}>
+              {/* Auditory Response Section */}
+              <div style={{
+                background: "linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%)",
+                padding: "28px",
+                borderRadius: "16px",
+                boxShadow: "0 4px 20px rgba(139, 92, 246, 0.12)",
+                border: "2px solid #8b5cf6"
+              }}>
+                <h3 style={{
+                  fontSize: "1.5rem",
+                  fontWeight: "900",
+                  color: "#5b21b6",
+                  marginBottom: "16px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px"
+                }}>
+                  <span style={{ fontSize: "2rem" }}>👂</span> Auditory Response Assessment
+                </h3>
+                <p style={{
+                  margin: "0",
+                  color: "#5b21b6",
+                  fontSize: "0.95rem",
+                  fontWeight: "500",
+                  lineHeight: "1.6"
+                }}>
+                  Track your child's hearing and auditory processing abilities. Monitor listening comprehension, sound discrimination, and auditory attention development.
+                </p>
+              </div>
             </div>
           </div>
         )}
