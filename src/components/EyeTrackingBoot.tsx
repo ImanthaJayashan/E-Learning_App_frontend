@@ -3,7 +3,10 @@ import { startEyeTracking } from "../services/eyeTracking";
 
 const EyeTrackingBoot = () => {
   useEffect(() => {
-    startEyeTracking();
+    const userRole = localStorage.getItem("userRole");
+    if (userRole === "child") {
+      startEyeTracking();
+    }
   }, []);
 
   return null;

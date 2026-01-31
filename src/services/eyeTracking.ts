@@ -100,6 +100,12 @@ const captureAndSend = async () => {
 };
 
 export const startEyeTracking = async () => {
+  const userRole = localStorage.getItem("userRole");
+  if (userRole !== "child") {
+    setState({ status: "Disabled for parents", error: null });
+    return;
+  }
+
   if (state.isTracking) return;
   if (!navigator?.mediaDevices?.getUserMedia) {
     setState({ status: "Error", error: "Camera not supported" });
