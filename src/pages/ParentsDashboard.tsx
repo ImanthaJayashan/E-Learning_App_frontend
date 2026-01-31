@@ -343,6 +343,37 @@ const ParentsDashboard: React.FC = () => {
                     ))}
                   </div>
                 </div>
+
+                {/* Start Vision Therapy Button */}
+                <div style={{
+                  marginTop: "16px"
+                }}>
+                  <button style={{
+                    width: "100%",
+                    background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
+                    color: "white",
+                    padding: "14px 20px",
+                    borderRadius: "10px",
+                    border: "none",
+                    fontSize: "1rem",
+                    fontWeight: "bold",
+                    cursor: "pointer",
+                    transition: "all 0.3s ease",
+                    boxShadow: "0 4px 12px rgba(239, 68, 68, 0.3)"
+                  }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = "translateY(-2px)";
+                      e.currentTarget.style.boxShadow = "0 6px 16px rgba(239, 68, 68, 0.4)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "translateY(0)";
+                      e.currentTarget.style.boxShadow = "0 4px 12px rgba(239, 68, 68, 0.3)";
+                    }}
+                    onClick={() => window.location.href = "/vision-therapy"}
+                  >
+                    🎯 Start Vision Therapy
+                  </button>
+                </div>
               </div>
 
               {/* Learning Progress Section */}
