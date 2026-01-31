@@ -3,7 +3,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
 const ParentsDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<"eye" | "writing" | "reading" | "auditory">("eye");
+  const [activeTab, setActiveTab] = useState<"eye" | "writing" | "reading" | "auditory" | "insights" | "detailed">("eye");
 
   const StatCard = ({ icon, title, value, change, color }: any) => (
     <div style={{
