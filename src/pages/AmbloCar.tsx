@@ -26,6 +26,9 @@ const AmbloCar: React.FC = () => {
   const [showLevelComplete, setShowLevelComplete] = useState(false);
   const [audioInitialized, setAudioInitialized] = useState(false);
 
+  const sessionStartTime = useRef(Date.now());
+  const failsCount = useRef(0);
+
   const size = useRef({ w: window.innerWidth, h: window.innerHeight });
   // Lane positions kept inside the white road area (top buffer 160px, bottom buffer 160px)
   const laneY = [200, 270, 340, 410, 480];
@@ -259,6 +262,7 @@ const AmbloCar: React.FC = () => {
         if (v.speed < 0 && v.x < -v.width) v.x = w;
 
         if (isCollide(man.current, v)) {
+          failsCount.current += 1;
           setGameOver(true);
         }
       });
@@ -302,6 +306,41 @@ const AmbloCar: React.FC = () => {
       window.removeEventListener("resize", resize);
     };
   }, [paused, gameOver, gameWon]);
+
+  /* ---------------- SAVE GAME SESSION ---------------- */
+  useEffect(() => {
+    return () => {
+      // Save session on unmount
+      try {
+        const currentSession = localStorage.getItem('currentVisionTherapySession');
+        if (!currentSession) return;
+        
+        const sessionData = JSON.parse(currentSession);
+        const duration = Date.now() - sessionStartTime.current;
+        const completedSession = {
+          ...sessionData,
+          endTime: new Date().toISOString(),
+          duration: Math.round(duration / 60000), // Convert to minutes
+          durationMs: duration,
+          score: score,
+          fails: failsCount.current,
+          level: level,
+          completed: gameWon
+        };
+        
+        // Get existing sessions
+        const sessionsStr = localStorage.getItem('visionTherapySessions') || '[]';
+        const sessions = JSON.parse(sessionsStr);
+        sessions.push(completedSession);
+        
+        // Save back
+        localStorage.setItem('visionTherapySessions', JSON.stringify(sessions));
+        localStorage.removeItem('currentVisionTherapySession');
+      } catch (error) {
+        console.error('Error saving vision therapy session:', error);
+      }
+    };
+  }, [score, level, gameWon]);
 
   /* ---------------- RESET ---------------- */
   const resetGame = () => {

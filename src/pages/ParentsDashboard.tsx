@@ -6,6 +6,10 @@ const ParentsDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"eye" | "writing" | "reading" | "auditory" | "insights" | "detailed">("eye");
   const [latestEyeResult, setLatestEyeResult] = useState<any>(null);
   const [eyeStatus, setEyeStatus] = useState("Waiting for detection...");
+  const [historyPeriod, setHistoryPeriod] = useState<7 | 14 | 21>(7);
+  const [historyData, setHistoryData] = useState<any>(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [visionTherapySessions, setVisionTherapySessions] = useState<any[]>([]);
   const [learningStats, setLearningStats] = useState({
     circle: { ms: 0, visits: 0, lastVisit: null as string | null },
     square: { ms: 0, visits: 0, lastVisit: null as string | null },
@@ -16,6 +20,7 @@ const ParentsDashboard: React.FC = () => {
 
   const apiBase = (import.meta as any).env?.VITE_BACKEND_URL?.replace(/\/$/, "") || "";
   const latestUrl = apiBase ? `${apiBase}/latest` : "/api/latest";
+  const historyUrl = apiBase ? `${apiBase}/history` : "/api/history";
 
   useEffect(() => {
     if (activeTab !== "eye") return;
@@ -81,6 +86,49 @@ const ParentsDashboard: React.FC = () => {
     const id = window.setInterval(readLearningStats, 5000);
     return () => window.clearInterval(id);
   }, []);
+
+  // Load vision therapy sessions
+  useEffect(() => {
+    const loadSessions = () => {
+      try {
+        const sessionsStr = localStorage.getItem('visionTherapySessions');
+        if (sessionsStr) {
+          const sessions = JSON.parse(sessionsStr);
+          setVisionTherapySessions(sessions);
+        }
+      } catch (error) {
+        console.error('Error loading vision therapy sessions:', error);
+      }
+    };
+
+    loadSessions();
+    const id = window.setInterval(loadSessions, 5000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  // Fetch eye check history
+  useEffect(() => {
+    if (activeTab !== "eye") return;
+
+    let isMounted = true;
+    const fetchHistory = async () => {
+      setHistoryLoading(true);
+      try {
+        const res = await fetch(`${historyUrl}?days=${historyPeriod}`, { cache: "no-store" });
+        if (!res.ok) throw new Error("No history data");
+        const data = await res.json();
+        if (!isMounted) return;
+        setHistoryData(data);
+      } catch (err) {
+        if (!isMounted) return;
+        setHistoryData(null);
+      } finally {
+        if (isMounted) setHistoryLoading(false);
+      }
+    };
+
+    fetchHistory();
+  }, [activeTab, historyPeriod, historyUrl]);
 
   const formatDuration = (ms: number) => {
     if (!ms) return "0 min";
@@ -564,6 +612,365 @@ const ParentsDashboard: React.FC = () => {
           </div>
         )}
 
+        {/* Eye Check History Analytics - NEW SECTION */}
+        {activeTab === "eye" && (
+          <div style={{
+            background: "white",
+            borderRadius: "16px",
+            padding: "28px",
+            marginBottom: "40px",
+            boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
+            border: "1px solid #e5e7eb"
+          }}>
+            {/* Header */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px" }}>
+              <h3 style={{ margin: 0, fontSize: "1.4rem", color: "#1f2937", fontWeight: 900 }}>
+                📊 Eye Check History & Analytics
+              </h3>
+            </div>
+
+            {/* Period Tabs */}
+            <div style={{ display: "flex", gap: "12px", marginBottom: "24px" }}>
+              {[
+                { days: 7, label: "7 Days" },
+                { days: 14, label: "14 Days" },
+                { days: 21, label: "21 Days" }
+              ].map(period => (
+                <button
+                  key={period.days}
+                  onClick={() => setHistoryPeriod(period.days as 7 | 14 | 21)}
+                  style={{
+                    padding: "10px 24px",
+                    fontSize: "0.9rem",
+                    fontWeight: 700,
+                    color: historyPeriod === period.days ? "white" : "#6b7280",
+                    background: historyPeriod === period.days 
+                      ? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" 
+                      : "#f3f4f6",
+                    border: historyPeriod === period.days ? "2px solid #667eea" : "2px solid #e5e7eb",
+                    borderRadius: "10px",
+                    cursor: "pointer",
+                    transition: "all 0.3s ease",
+                    boxShadow: historyPeriod === period.days ? "0 4px 12px rgba(102, 126, 234, 0.3)" : "none"
+                  }}
+                  onMouseEnter={(e) => {
+                    if (historyPeriod !== period.days) {
+                      e.currentTarget.style.background = "#e5e7eb";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (historyPeriod !== period.days) {
+                      e.currentTarget.style.background = "#f3f4f6";
+                    }
+                  }}
+                >
+                  {period.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Loading State */}
+            {historyLoading && (
+              <div style={{
+                textAlign: "center",
+                padding: "40px",
+                color: "#6b7280",
+                fontSize: "0.95rem"
+              }}>
+                ⏳ Loading history data...
+              </div>
+            )}
+
+            {/* No Data State */}
+            {!historyLoading && (!historyData || historyData.total_checks === 0) && (
+              <div style={{
+                background: "#fef3c7",
+                border: "1px solid #fcd34d",
+                padding: "24px",
+                borderRadius: "12px",
+                color: "#92400e",
+                textAlign: "center"
+              }}>
+                📭 No eye check history available for the selected period. Start eye tracking to collect data!
+              </div>
+            )}
+
+            {/* History Data Display */}
+            {!historyLoading && historyData && historyData.total_checks > 0 && (
+              <div>
+                {/* Summary Stats */}
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                  gap: "16px",
+                  marginBottom: "28px"
+                }}>
+                  <div style={{
+                    background: "linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)",
+                    padding: "18px",
+                    borderRadius: "12px",
+                    border: "2px solid #0284c7"
+                  }}>
+                    <div style={{ fontSize: "0.85rem", color: "#0c4a6e", fontWeight: 600, marginBottom: "8px" }}>
+                      Total Checks
+                    </div>
+                    <div style={{ fontSize: "2rem", fontWeight: 900, color: "#0284c7" }}>
+                      {historyData.total_checks}
+                    </div>
+                  </div>
+
+                  <div style={{
+                    background: "linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)",
+                    padding: "18px",
+                    borderRadius: "12px",
+                    border: "2px solid #10b981"
+                  }}>
+                    <div style={{ fontSize: "0.85rem", color: "#065f46", fontWeight: 600, marginBottom: "8px" }}>
+                      Normal Checks
+                    </div>
+                    <div style={{ fontSize: "2rem", fontWeight: 900, color: "#10b981" }}>
+                      {historyData.daily_summary?.filter((d: any) => d.normal_count > 0).reduce((acc: number, d: any) => acc + d.normal_count, 0) || 0}
+                    </div>
+                  </div>
+
+                  <div style={{
+                    background: "linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)",
+                    padding: "18px",
+                    borderRadius: "12px",
+                    border: "2px solid #ef4444"
+                  }}>
+                    <div style={{ fontSize: "0.85rem", color: "#991b1b", fontWeight: 600, marginBottom: "8px" }}>
+                      Attention Needed
+                    </div>
+                    <div style={{ fontSize: "2rem", fontWeight: 900, color: "#ef4444" }}>
+                      {historyData.daily_summary?.filter((d: any) => d.lazy_eye_count > 0).reduce((acc: number, d: any) => acc + d.lazy_eye_count, 0) || 0}
+                    </div>
+                  </div>
+
+                  <div style={{
+                    background: "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)",
+                    padding: "18px",
+                    borderRadius: "12px",
+                    border: "2px solid #f59e0b"
+                  }}>
+                    <div style={{ fontSize: "0.85rem", color: "#92400e", fontWeight: 600, marginBottom: "8px" }}>
+                      Active Days
+                    </div>
+                    <div style={{ fontSize: "2rem", fontWeight: 900, color: "#f59e0b" }}>
+                      {historyData.daily_summary?.length || 0}/{historyPeriod}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Day-by-Day Timeline */}
+                <div style={{
+                  background: "#f9fafb",
+                  padding: "24px",
+                  borderRadius: "12px",
+                  border: "1px solid #e5e7eb"
+                }}>
+                  <h4 style={{ margin: "0 0 20px 0", fontSize: "1.1rem", color: "#1f2937", fontWeight: 900 }}>
+                    📅 Day-by-Day Analysis
+                  </h4>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    {historyData.daily_summary?.map((day: any, idx: number) => {
+                      const normalPercent = day.total_checks > 0 ? (day.normal_count / day.total_checks) * 100 : 0;
+                      const lazyPercent = day.total_checks > 0 ? (day.lazy_eye_count / day.total_checks) * 100 : 0;
+                      
+                      return (
+                        <div key={idx} style={{
+                          background: "white",
+                          padding: "18px",
+                          borderRadius: "10px",
+                          border: "2px solid #e5e7eb",
+                          transition: "all 0.2s ease"
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
+                          e.currentTarget.style.borderColor = "#667eea";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.boxShadow = "none";
+                          e.currentTarget.style.borderColor = "#e5e7eb";
+                        }}>
+                          {/* Day Header */}
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
+                            <div>
+                              <div style={{ fontSize: "1.05rem", fontWeight: 900, color: "#1f2937" }}>
+                                {new Date(day.date).toLocaleDateString('en-US', { 
+                                  weekday: 'short', 
+                                  month: 'short', 
+                                  day: 'numeric',
+                                  year: 'numeric'
+                                })}
+                              </div>
+                              <div style={{ fontSize: "0.85rem", color: "#6b7280", marginTop: "4px" }}>
+                                {day.total_checks} check{day.total_checks !== 1 ? 's' : ''} performed
+                              </div>
+                            </div>
+                            <div style={{
+                              background: day.status === 'normal' 
+                                ? "linear-gradient(135deg, #10b981, #059669)" 
+                                : "linear-gradient(135deg, #f59e0b, #d97706)",
+                              color: "white",
+                              padding: "8px 16px",
+                              borderRadius: "20px",
+                              fontSize: "0.85rem",
+                              fontWeight: 900
+                            }}>
+                              {day.status === 'normal' ? '✓ Normal Day' : '⚠️ Needs Care'}
+                            </div>
+                          </div>
+
+                          {/* Progress Bars */}
+                          <div style={{ marginBottom: "12px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                              <span style={{ fontSize: "0.85rem", color: "#10b981", fontWeight: 700 }}>
+                                Normal: {day.normal_count}
+                              </span>
+                              <span style={{ fontSize: "0.85rem", color: "#10b981", fontWeight: 900 }}>
+                                {normalPercent.toFixed(0)}%
+                              </span>
+                            </div>
+                            <div style={{
+                              width: "100%",
+                              height: "8px",
+                              backgroundColor: "#e5e7eb",
+                              borderRadius: "4px",
+                              overflow: "hidden"
+                            }}>
+                              <div style={{
+                                width: `${normalPercent}%`,
+                                height: "100%",
+                                background: "linear-gradient(90deg, #10b981, #34d399)",
+                                borderRadius: "4px",
+                                transition: "width 0.4s ease"
+                              }} />
+                            </div>
+                          </div>
+
+                          <div style={{ marginBottom: "12px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                              <span style={{ fontSize: "0.85rem", color: "#ef4444", fontWeight: 700 }}>
+                                Lazy Eye: {day.lazy_eye_count}
+                              </span>
+                              <span style={{ fontSize: "0.85rem", color: "#ef4444", fontWeight: 900 }}>
+                                {lazyPercent.toFixed(0)}%
+                              </span>
+                            </div>
+                            <div style={{
+                              width: "100%",
+                              height: "8px",
+                              backgroundColor: "#e5e7eb",
+                              borderRadius: "4px",
+                              overflow: "hidden"
+                            }}>
+                              <div style={{
+                                width: `${lazyPercent}%`,
+                                height: "100%",
+                                background: "linear-gradient(90deg, #ef4444, #f87171)",
+                                borderRadius: "4px",
+                                transition: "width 0.4s ease"
+                              }} />
+                            </div>
+                          </div>
+
+                          {/* Average Confidence */}
+                          <div style={{
+                            background: "#f0f9ff",
+                            padding: "10px",
+                            borderRadius: "8px",
+                            fontSize: "0.85rem",
+                            color: "#0c4a6e",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center"
+                          }}>
+                            <span style={{ fontWeight: 600 }}>Average Confidence:</span>
+                            <span style={{ fontWeight: 900, fontSize: "0.95rem" }}>
+                              {(day.avg_confidence * 100).toFixed(1)}%
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Trend Chart Visualization */}
+                <div style={{
+                  marginTop: "28px",
+                  background: "white",
+                  padding: "24px",
+                  borderRadius: "12px",
+                  border: "2px solid #e5e7eb"
+                }}>
+                  <h4 style={{ margin: "0 0 20px 0", fontSize: "1.1rem", color: "#1f2937", fontWeight: 900 }}>
+                    📈 Check Frequency Trend
+                  </h4>
+                  
+                  <div style={{
+                    display: "grid",
+                    gridTemplateColumns: `repeat(${Math.min(historyData.daily_summary?.length || 1, historyPeriod)}, 1fr)`,
+                    gap: "8px",
+                    alignItems: "end",
+                    height: "200px"
+                  }}>
+                    {historyData.daily_summary?.map((day: any, idx: number) => {
+                      const maxChecks = Math.max(...(historyData.daily_summary?.map((d: any) => d.total_checks) || [1]));
+                      const height = Math.max(20, (day.total_checks / maxChecks) * 180);
+                      
+                      return (
+                        <div key={idx} style={{ textAlign: "center" }}>
+                          <div style={{
+                            height: `${height}px`,
+                            background: day.status === 'normal'
+                              ? "linear-gradient(180deg, #10b981, #059669)"
+                              : "linear-gradient(180deg, #f59e0b, #d97706)",
+                            borderRadius: "8px 8px 0 0",
+                            marginBottom: "8px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "white",
+                            fontWeight: 900,
+                            fontSize: "0.9rem",
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                            transition: "all 0.2s ease",
+                            cursor: "pointer"
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = "translateY(-4px)";
+                            e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = "translateY(0)";
+                            e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)";
+                          }}>
+                            {day.total_checks}
+                          </div>
+                          <div style={{ 
+                            fontSize: "0.75rem", 
+                            color: "#6b7280",
+                            fontWeight: 700,
+                            transform: "rotate(-45deg)",
+                            transformOrigin: "center",
+                            whiteSpace: "nowrap",
+                            marginTop: "8px"
+                          }}>
+                            {new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Tabs Navigation - Assessment Categories */}
         <div style={{
           display: "flex",
@@ -1039,7 +1446,7 @@ const ParentsDashboard: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Vision Therapy Progress Section - Enhanced */}
+                {/* Vision Therapy Progress Section - Dynamic */}
                 <div style={{
                   background: "linear-gradient(135deg, #fff5e6 0%, #fef3c7 100%)",
                   padding: "20px",
@@ -1048,240 +1455,406 @@ const ParentsDashboard: React.FC = () => {
                   border: "3px solid #f59e0b",
                   boxShadow: "0 4px 12px rgba(245, 158, 11, 0.15)"
                 }}>
-                  <h4 style={{
-                    fontSize: "1.1rem",
-                    fontWeight: "900",
-                    color: "#92400e",
-                    marginBottom: "16px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px"
-                  }}>
-                    <span style={{ fontSize: "1.3rem" }}>🎯</span> Vision Therapy Progress - Stage 1
-                  </h4>
-
-                  {/* Stage 1 Completion Progress - Enhanced */}
-                  <div style={{ marginBottom: "18px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", alignItems: "center" }}>
-                      <span style={{ fontSize: "0.95rem", fontWeight: "700", color: "#333" }}>Stage 1 Completion (21 Days)</span>
-                      <span style={{ 
-                        fontSize: "0.9rem", 
-                        fontWeight: "900", 
-                        color: "#f59e0b",
-                        backgroundColor: "#fff8e1",
-                        padding: "4px 12px",
-                        borderRadius: "20px"
-                      }}>
-                        9/21 Days
-                      </span>
-                    </div>
-                    <div style={{
-                      width: "100%",
-                      height: "14px",
-                      backgroundColor: "#fef3c7",
-                      borderRadius: "8px",
-                      overflow: "hidden",
-                      border: "1px solid #fbbf24"
-                    }}>
-                      <div style={{
-                        width: "43%",
-                        height: "100%",
-                        background: "linear-gradient(90deg, #f59e0b, #fbbf24, #fcd34d)",
-                        borderRadius: "8px",
-                        transition: "width 0.4s ease",
-                        boxShadow: "0 0 8px rgba(245, 158, 11, 0.3)"
-                      }} />
-                    </div>
-                  </div>
-
-                  {/* Sessions Done - Enhanced */}
-                  <div style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: "12px",
-                    marginBottom: "16px"
-                  }}>
-                    <div style={{
-                      backgroundColor: "rgba(255,255,255,0.8)",
-                      padding: "14px",
-                      borderRadius: "10px",
-                      border: "2px solid #fcd34d"
-                    }}>
-                      <p style={{ margin: "0", fontSize: "0.85rem", color: "#92400e", fontWeight: "700", textTransform: "uppercase" }}>Total Sessions</p>
-                      <p style={{ margin: "8px 0 0 0", fontSize: "1.5rem", fontWeight: "900", color: "#f59e0b" }}>9 Sessions</p>
-                    </div>
-                    <div style={{
-                      backgroundColor: "rgba(255,255,255,0.8)",
-                      padding: "14px",
-                      borderRadius: "10px",
-                      border: "2px solid #10b981",
-                      background: "linear-gradient(135deg, #f0fdf4 0%, #dbeafe 100%)"
-                    }}>
-                      <p style={{ margin: "0", fontSize: "0.85rem", color: "#047857", fontWeight: "700", textTransform: "uppercase" }}>Next Session</p>
-                      <p style={{ margin: "8px 0 0 0", fontSize: "1.4rem", fontWeight: "900", color: "#10b981" }}>📅 Feb 1</p>
-                      <p style={{ margin: "2px 0 0 0", fontSize: "0.8rem", color: "#059669" }}>2:00 PM</p>
-                    </div>
-                  </div>
-
-                  {/* Recent Session History - Enhanced */}
-                  <div style={{
-                    marginBottom: "14px",
-                    borderTop: "2px solid #fbbf24",
-                    paddingTop: "12px"
-                  }}>
-                    <p style={{ margin: "0 0 10px 0", fontSize: "0.9rem", fontWeight: "900", color: "#92400e" }}>
-                      ⏱️ Last 5 Sessions:
-                    </p>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                      {[
-                        { session: "Session 9", date: "Jan 31, 3:30 PM", duration: "15 min" },
-                        { session: "Session 8", date: "Jan 30, 2:00 PM", duration: "15 min" },
-                        { session: "Session 7", date: "Jan 29, 3:45 PM", duration: "15 min" },
-                        { session: "Session 6", date: "Jan 28, 2:15 PM", duration: "15 min" },
-                        { session: "Session 5", date: "Jan 27, 4:00 PM", duration: "15 min" }
-                      ].map((item, idx) => (
-                        <div key={idx} style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          fontSize: "0.9rem",
-                          padding: "10px",
-                          backgroundColor: "rgba(255,255,255,0.5)",
-                          borderRadius: "8px",
-                          transition: "all 0.2s ease",
-                          border: "1px solid rgba(255,255,255,0.8)"
-                        }}>
-                          <div>
-                            <span style={{ fontWeight: "700", color: "#333" }}>{item.session}</span>
-                            <span style={{ color: "#666", marginLeft: "10px" }}>• {item.date}</span>
-                          </div>
-                          <span style={{ color: "#f59e0b", fontWeight: "900", fontSize: "0.95rem" }}>⏱️ {item.duration}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Recommended Weekly Schedule - Enhanced */}
-                  <div style={{
-                    backgroundColor: "white",
-                    border: "2px solid #0284c7",
-                    padding: "16px",
-                    borderRadius: "10px",
-                    marginTop: "14px",
-                    boxShadow: "0 2px 6px rgba(2, 132, 199, 0.1)"
-                  }}>
-                    <p style={{
-                      margin: "0 0 12px 0",
-                      fontSize: "0.95rem",
-                      fontWeight: "900",
-                      color: "#0c4a6e",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px"
-                    }}>
-                      <span style={{ fontSize: "1.1rem" }}>📅</span> Recommended Weekly Schedule
-                    </p>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "10px", marginBottom: "12px" }}>
-                      {[
-                        { week: "Week 1", time: "5 min", status: "Completed ✓" },
-                        { week: "Week 2", time: "10 min", status: "In Progress" },
-                        { week: "Week 3", time: "15 min", status: "Upcoming" },
-                        { week: "Week 4", time: "20 min", status: "Upcoming" },
-                        { week: "Week 5 & Beyond", time: "25 min", status: "Upcoming" }
-                      ].map((item, idx) => {
-                        let bgColor = "#dbeafe";
-                        let textColor = "#0c4a6e";
-                        let statusColor = "#0284c7";
-                        let statusBg = "#e0f2fe";
-                        
-                        if (item.status === "Completed ✓") {
-                          bgColor = "#dbeafe";
-                          statusColor = "#10b981";
-                          statusBg = "#dcfce7";
-                        } else if (item.status === "In Progress") {
-                          bgColor = "#fef3c7";
-                          statusColor = "#f59e0b";
-                          statusBg = "#fef3c7";
-                        } else {
-                          bgColor = "#f3f4f6";
-                          statusColor = "#9ca3af";
-                          statusBg = "#f3f4f6";
-                        }
-                        
-                        return (
-                          <div key={idx} style={{
-                            backgroundColor: bgColor,
-                            padding: "12px",
-                            borderRadius: "10px",
-                            fontSize: "0.85rem",
-                            border: `2px solid ${statusColor}`,
-                            transition: "all 0.3s ease"
+                  {(() => {
+                    const totalSessions = visionTherapySessions.length;
+                    const therapyStarted = localStorage.getItem('visionTherapyStarted') === 'true';
+                    const startDate = localStorage.getItem('visionTherapyStartDate');
+                    
+                    // Calculate days since start
+                    let daysSinceStart = 0;
+                    let activeDays = 0;
+                    if (startDate) {
+                      const start = new Date(startDate);
+                      const now = new Date();
+                      daysSinceStart = Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+                      
+                      // Count unique days with sessions
+                      const uniqueDays = new Set(
+                        visionTherapySessions.map(s => new Date(s.startTime).toDateString())
+                      );
+                      activeDays = uniqueDays.size;
+                    }
+                    
+                    const completionPercent = Math.min(100, (daysSinceStart / 21) * 100);
+                    
+                    // Get last 5 sessions
+                    const recentSessions = [...visionTherapySessions]
+                      .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
+                      .slice(0, 5);
+                    
+                    // Calculate current week (1-5+)
+                    const currentWeek = Math.min(5, Math.floor(daysSinceStart / 7) + 1);
+                    
+                    if (!therapyStarted || totalSessions === 0) {
+                      return (
+                        <div style={{ textAlign: "center", padding: "20px" }}>
+                          <h4 style={{
+                            fontSize: "1.1rem",
+                            fontWeight: "900",
+                            color: "#92400e",
+                            marginBottom: "16px"
                           }}>
-                            <p style={{ margin: "0 0 6px 0", fontWeight: "900", color: "#1f2937", fontSize: "0.9rem" }}>
-                              {item.week}
-                            </p>
-                            <p style={{ margin: "0 0 8px 0", fontSize: "0.8rem", color: "#666" }}>
-                              ⏱️ <span style={{ fontWeight: "bold", color: "#0284c7" }}>{item.time}</span>
-                            </p>
-                            <span style={{
-                              display: "inline-block",
-                              backgroundColor: statusBg,
-                              color: statusColor,
-                              padding: "4px 10px",
-                              borderRadius: "6px",
-                              fontSize: "0.75rem",
-                              fontWeight: "900"
+                            <span style={{ fontSize: "1.3rem" }}>🎯</span> Vision Therapy Progress
+                          </h4>
+                          <p style={{ color: "#92400e", marginBottom: "16px" }}>
+                            No therapy sessions recorded yet. Click "Start Vision Therapy" below to begin!
+                          </p>
+                        </div>
+                      );
+                    }
+                    
+                    return (
+                      <>
+                        <h4 style={{
+                          fontSize: "1.1rem",
+                          fontWeight: "900",
+                          color: "#92400e",
+                          marginBottom: "16px",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px"
+                        }}>
+                          <span style={{ fontSize: "1.3rem" }}>🎯</span> Vision Therapy Progress - Stage 1
+                        </h4>
+
+                        {/* Stage 1 Completion Progress */}
+                        <div style={{ marginBottom: "18px" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", alignItems: "center" }}>
+                            <span style={{ fontSize: "0.95rem", fontWeight: "700", color: "#333" }}>
+                              Stage 1 Completion (21 Days)
+                            </span>
+                            <span style={{ 
+                              fontSize: "0.9rem", 
+                              fontWeight: "900", 
+                              color: "#f59e0b",
+                              backgroundColor: "#fff8e1",
+                              padding: "4px 12px",
+                              borderRadius: "20px"
                             }}>
-                              {item.status}
+                              {activeDays}/21 Days
                             </span>
                           </div>
-                        );
-                      })}
-                    </div>
-                    <p style={{
-                      margin: "0",
-                      fontSize: "0.8rem",
-                      color: "#0c4a6e",
-                      fontStyle: "italic",
-                      backgroundColor: "#f0f9ff",
-                      padding: "10px",
-                      borderRadius: "6px",
-                      border: "1px solid #bfdbfe"
-                    }}>
-                      💡 Gradually increase therapy duration by 5 minutes each week for better eye muscle adaptation
-                    </p>
-                  </div>
+                          <div style={{
+                            width: "100%",
+                            height: "14px",
+                            backgroundColor: "#fef3c7",
+                            borderRadius: "8px",
+                            overflow: "hidden",
+                            border: "1px solid #fbbf24"
+                          }}>
+                            <div style={{
+                              width: `${completionPercent}%`,
+                              height: "100%",
+                              background: "linear-gradient(90deg, #f59e0b, #fbbf24, #fcd34d)",
+                              borderRadius: "8px",
+                              transition: "width 0.4s ease",
+                              boxShadow: "0 0 8px rgba(245, 158, 11, 0.3)"
+                            }} />
+                          </div>
+                        </div>
 
-                  {/* Doctor's Advice - Enhanced */}
-                  <div style={{
-                    background: "linear-gradient(135deg, #fef2f2 0%, #fecaca 100%)",
-                    border: "3px solid #ef4444",
-                    padding: "16px",
-                    borderRadius: "10px",
-                    marginTop: "14px",
-                    boxShadow: "0 2px 6px rgba(239, 68, 68, 0.15)"
-                  }}>
-                    <p style={{
-                      margin: "0 0 10px 0",
-                      fontSize: "0.95rem",
-                      fontWeight: "900",
-                      color: "#991b1b",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px"
-                    }}>
-                      <span style={{ fontSize: "1.2rem" }}>👨‍⚕️</span> Doctor's Advice Required
-                    </p>
-                    <p style={{
-                      margin: "0",
-                      fontSize: "0.85rem",
-                      color: "#7f1d1d",
-                      lineHeight: "1.5",
-                      fontWeight: "500"
-                    }}>
-                      Please consult with your child's eye doctor after completing Stage 1 (21 days) to assess progress and adjust the therapy plan if needed.
-                    </p>
-                  </div>
+                        {/* Sessions Done */}
+                        <div style={{
+                          display: "grid",
+                          gridTemplateColumns: "1fr 1fr",
+                          gap: "12px",
+                          marginBottom: "16px"
+                        }}>
+                          <div style={{
+                            backgroundColor: "rgba(255,255,255,0.8)",
+                            padding: "14px",
+                            borderRadius: "10px",
+                            border: "2px solid #fcd34d"
+                          }}>
+                            <p style={{ margin: "0", fontSize: "0.85rem", color: "#92400e", fontWeight: "700", textTransform: "uppercase" }}>
+                              Total Sessions
+                            </p>
+                            <p style={{ margin: "8px 0 0 0", fontSize: "1.5rem", fontWeight: "900", color: "#f59e0b" }}>
+                              {totalSessions} Session{totalSessions !== 1 ? 's' : ''}
+                            </p>
+                          </div>
+                          <div style={{
+                            backgroundColor: "rgba(255,255,255,0.8)",
+                            padding: "14px",
+                            borderRadius: "10px",
+                            border: "2px solid #10b981",
+                            background: "linear-gradient(135deg, #f0fdf4 0%, #dbeafe 100%)"
+                          }}>
+                            <p style={{ margin: "0", fontSize: "0.85rem", color: "#047857", fontWeight: "700", textTransform: "uppercase" }}>
+                              Last Session
+                            </p>
+                            <p style={{ margin: "8px 0 0 0", fontSize: "1.1rem", fontWeight: "900", color: "#10b981" }}>
+                              {recentSessions[0] ? new Date(recentSessions[0].startTime).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                timeZone: 'Asia/Colombo'
+                              }) : 'N/A'}
+                            </p>
+                            <p style={{ margin: "2px 0 0 0", fontSize: "0.8rem", color: "#059669" }}>
+                              {recentSessions[0] ? new Date(recentSessions[0].startTime).toLocaleTimeString('en-US', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: true,
+                                timeZone: 'Asia/Colombo'
+                              }) : ''}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Performance Statistics */}
+                        {(() => {
+                          const totalScore = visionTherapySessions.reduce((sum, s) => sum + (s.score || 0), 0);
+                          const totalFails = visionTherapySessions.reduce((sum, s) => sum + (s.fails || 0), 0);
+                          const totalPlayTime = visionTherapySessions.reduce((sum, s) => sum + (s.durationMs || 0), 0);
+                          const avgPlayTime = totalSessions > 0 ? Math.round(totalPlayTime / totalSessions / 60000) : 0;
+                          
+                          return (
+                            <div style={{
+                              display: "grid",
+                              gridTemplateColumns: "1fr 1fr 1fr",
+                              gap: "10px",
+                              marginBottom: "16px"
+                            }}>
+                              <div style={{
+                                backgroundColor: "rgba(16, 185, 129, 0.1)",
+                                padding: "12px",
+                                borderRadius: "8px",
+                                border: "2px solid #10b981",
+                                textAlign: "center"
+                              }}>
+                                <p style={{ margin: "0", fontSize: "0.75rem", color: "#047857", fontWeight: "700", textTransform: "uppercase" }}>
+                                  Total Score
+                                </p>
+                                <p style={{ margin: "6px 0 0 0", fontSize: "1.3rem", fontWeight: "900", color: "#10b981" }}>
+                                  🎯 {totalScore}
+                                </p>
+                              </div>
+                              <div style={{
+                                backgroundColor: "rgba(239, 68, 68, 0.1)",
+                                padding: "12px",
+                                borderRadius: "8px",
+                                border: "2px solid #ef4444",
+                                textAlign: "center"
+                              }}>
+                                <p style={{ margin: "0", fontSize: "0.75rem", color: "#991b1b", fontWeight: "700", textTransform: "uppercase" }}>
+                                  Total Fails
+                                </p>
+                                <p style={{ margin: "6px 0 0 0", fontSize: "1.3rem", fontWeight: "900", color: "#ef4444" }}>
+                                  ❌ {totalFails}
+                                </p>
+                              </div>
+                              <div style={{
+                                backgroundColor: "rgba(59, 130, 246, 0.1)",
+                                padding: "12px",
+                                borderRadius: "8px",
+                                border: "2px solid #3b82f6",
+                                textAlign: "center"
+                              }}>
+                                <p style={{ margin: "0", fontSize: "0.75rem", color: "#1e40af", fontWeight: "700", textTransform: "uppercase" }}>
+                                  Avg Time
+                                </p>
+                                <p style={{ margin: "6px 0 0 0", fontSize: "1.3rem", fontWeight: "900", color: "#3b82f6" }}>
+                                  ⏱️ {avgPlayTime} min
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })()}
+
+                        {/* Recent Session History */}
+                        {recentSessions.length > 0 && (
+                          <div style={{
+                            marginBottom: "14px",
+                            borderTop: "2px solid #fbbf24",
+                            paddingTop: "12px"
+                          }}>
+                            <p style={{ margin: "0 0 10px 0", fontSize: "0.9rem", fontWeight: "900", color: "#92400e" }}>
+                              ⏱️ Last {Math.min(5, recentSessions.length)} Session{recentSessions.length !== 1 ? 's' : ''}:
+                            </p>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                              {recentSessions.map((session, idx) => (
+                                <div key={idx} style={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "center",
+                                  fontSize: "0.9rem",
+                                  padding: "10px",
+                                  backgroundColor: "rgba(255,255,255,0.5)",
+                                  borderRadius: "8px",
+                                  transition: "all 0.2s ease",
+                                  border: "1px solid rgba(255,255,255,0.8)"
+                                }}>
+                                  <div style={{ flex: 1 }}>
+                                    <div>
+                                      <span style={{ fontWeight: "700", color: "#333" }}>
+                                        {session.gameTitle} {session.icon}
+                                      </span>
+                                      <span style={{ color: "#666", marginLeft: "10px", fontSize: "0.85rem" }}>
+                                        • {new Date(session.startTime).toLocaleDateString('en-US', {
+                                          month: 'short',
+                                          day: 'numeric',
+                                          hour: '2-digit',
+                                          minute: '2-digit',
+                                          hour12: true,
+                                          timeZone: 'Asia/Colombo'
+                                        })}
+                                      </span>
+                                    </div>
+                                    <div style={{ 
+                                      display: "flex", 
+                                      gap: "12px", 
+                                      marginTop: "4px",
+                                      fontSize: "0.8rem",
+                                      color: "#666"
+                                    }}>
+                                      {session.score !== undefined && (
+                                        <span>🎯 Score: <strong style={{ color: "#10b981" }}>{session.score}</strong></span>
+                                      )}
+                                      {session.fails !== undefined && (
+                                        <span>❌ Fails: <strong style={{ color: "#ef4444" }}>{session.fails}</strong></span>
+                                      )}
+                                      {(session.level !== undefined || session.misses !== undefined) && (
+                                        <span>{session.level ? `🎮 Level: ${session.level}` : `🎯 Misses: ${session.misses}`}</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <span style={{ 
+                                    color: "#f59e0b", 
+                                    fontWeight: "900", 
+                                    fontSize: "0.95rem",
+                                    whiteSpace: "nowrap",
+                                    marginLeft: "12px"
+                                  }}>
+                                    ⏱️ {session.duration || '<1 min'}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Recommended Weekly Schedule */}
+                        <div style={{
+                          backgroundColor: "white",
+                          border: "2px solid #0284c7",
+                          padding: "16px",
+                          borderRadius: "10px",
+                          marginTop: "14px",
+                          boxShadow: "0 2px 6px rgba(2, 132, 199, 0.1)"
+                        }}>
+                          <p style={{
+                            margin: "0 0 12px 0",
+                            fontSize: "0.95rem",
+                            fontWeight: "900",
+                            color: "#0c4a6e",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px"
+                          }}>
+                            <span style={{ fontSize: "1.1rem" }}>📅</span> Recommended Weekly Schedule
+                          </p>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "10px", marginBottom: "12px" }}>
+                            {[
+                              { week: "Week 1", time: "5 min", weekNum: 1 },
+                              { week: "Week 2", time: "10 min", weekNum: 2 },
+                              { week: "Week 3", time: "15 min", weekNum: 3 },
+                              { week: "Week 4", time: "20 min", weekNum: 4 },
+                              { week: "Week 5+", time: "25 min", weekNum: 5 }
+                            ].map((item, idx) => {
+                              let status = "Upcoming";
+                              let bgColor = "#f3f4f6";
+                              let statusColor = "#9ca3af";
+                              let statusBg = "#f3f4f6";
+                              
+                              if (item.weekNum < currentWeek) {
+                                status = "Completed ✓";
+                                bgColor = "#dbeafe";
+                                statusColor = "#10b981";
+                                statusBg = "#dcfce7";
+                              } else if (item.weekNum === currentWeek) {
+                                status = "In Progress";
+                                bgColor = "#fef3c7";
+                                statusColor = "#f59e0b";
+                                statusBg = "#fef3c7";
+                              }
+                              
+                              return (
+                                <div key={idx} style={{
+                                  backgroundColor: bgColor,
+                                  padding: "12px",
+                                  borderRadius: "10px",
+                                  fontSize: "0.85rem",
+                                  border: `2px solid ${statusColor}`,
+                                  transition: "all 0.3s ease"
+                                }}>
+                                  <p style={{ margin: "0 0 6px 0", fontWeight: "900", color: "#1f2937", fontSize: "0.9rem" }}>
+                                    {item.week}
+                                  </p>
+                                  <p style={{ margin: "0 0 8px 0", fontSize: "0.8rem", color: "#666" }}>
+                                    ⏱️ <span style={{ fontWeight: "bold", color: "#0284c7" }}>{item.time}</span>
+                                  </p>
+                                  <span style={{
+                                    display: "inline-block",
+                                    backgroundColor: statusBg,
+                                    color: statusColor,
+                                    padding: "4px 10px",
+                                    borderRadius: "6px",
+                                    fontSize: "0.75rem",
+                                    fontWeight: "900"
+                                  }}>
+                                    {status}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                          <p style={{
+                            margin: "0",
+                            fontSize: "0.8rem",
+                            color: "#0c4a6e",
+                            fontStyle: "italic",
+                            backgroundColor: "#f0f9ff",
+                            padding: "10px",
+                            borderRadius: "6px",
+                            border: "1px solid #bfdbfe"
+                          }}>
+                            💡 Gradually increase therapy duration by 5 minutes each week for better eye muscle adaptation
+                          </p>
+                        </div>
+
+                        {/* Doctor's Advice */}
+                        <div style={{
+                          background: "linear-gradient(135deg, #fef2f2 0%, #fecaca 100%)",
+                          border: "3px solid #ef4444",
+                          padding: "16px",
+                          borderRadius: "10px",
+                          marginTop: "14px",
+                          boxShadow: "0 2px 6px rgba(239, 68, 68, 0.15)"
+                        }}>
+                          <p style={{
+                            margin: "0 0 10px 0",
+                            fontSize: "0.95rem",
+                            fontWeight: "900",
+                            color: "#991b1b",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px"
+                          }}>
+                            <span style={{ fontSize: "1.2rem" }}>👨‍⚕️</span> Doctor's Advice Required
+                          </p>
+                          <p style={{
+                            margin: "0",
+                            fontSize: "0.85rem",
+                            color: "#7f1d1d",
+                            lineHeight: "1.5",
+                            fontWeight: "500"
+                          }}>
+                            Please consult with your child's eye doctor after completing Stage 1 (21 days) to assess progress and adjust the therapy plan if needed.
+                          </p>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
 
                 {/* Start Vision Therapy Button */}

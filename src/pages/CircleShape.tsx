@@ -26,12 +26,48 @@ const trackLearningTime = (timeKey: string, countKey: string, lastVisitKey: stri
   };
 };
 
+const saveVisionTherapySession = (duration: number) => {
+  try {
+    const currentSession = localStorage.getItem('currentVisionTherapySession');
+    if (!currentSession) return;
+    
+    const sessionData = JSON.parse(currentSession);
+    const completedSession = {
+      ...sessionData,
+      endTime: new Date().toISOString(),
+      duration: Math.round(duration / 60000), // Convert to minutes
+      durationMs: duration
+    };
+    
+    // Get existing sessions
+    const sessionsStr = localStorage.getItem('visionTherapySessions') || '[]';
+    const sessions = JSON.parse(sessionsStr);
+    sessions.push(completedSession);
+    
+    // Save back
+    localStorage.setItem('visionTherapySessions', JSON.stringify(sessions));
+    localStorage.removeItem('currentVisionTherapySession');
+  } catch (error) {
+    console.error('Error saving vision therapy session:', error);
+  }
+};
+
 const CircleShape: React.FC = () => {
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
   const [show3DCircle, setShow3DCircle] = useState(false);
 
-  useEffect(() => trackLearningTime("learningTime_circle", "learningVisits_circle", "learningLastVisit_circle"), []);
+  useEffect(() => {
+    const stopTracking = trackLearningTime("learningTime_circle", "learningVisits_circle", "learningLastVisit_circle");
+    const sessionStart = Date.now();
+    
+    return () => {
+      stopTracking();
+      // Save vision therapy session if this was part of therapy
+      const sessionDuration = Date.now() - sessionStart;
+      saveVisionTherapySession(sessionDuration);
+    };
+  }, []);
   
   // Preschool Game State
   const gameCanvasRef = useRef<HTMLCanvasElement>(null);

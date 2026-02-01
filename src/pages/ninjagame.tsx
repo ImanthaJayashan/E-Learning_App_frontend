@@ -78,6 +78,9 @@ const ShapeNinja: React.FC = () => {
   const gameOverRef = useRef(false);
   const audioCtxRef = useRef<AudioContext | null>(null);
 
+  const sessionStartTime = useRef(Date.now());
+  const failsCount = useRef(0);
+
   const playMissSound = async () => {
     try {
       const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
@@ -276,6 +279,7 @@ const ShapeNinja: React.FC = () => {
             setScore((prev) => prev + 1);
           } else {
             // Wrong shape sliced!
+            failsCount.current += 1;
             setScore((prev) => Math.max(0, prev - 2)); // Decrease by 2, minimum 0
             playMissSound();
             setWrongShapeType(s.type);
@@ -489,7 +493,47 @@ const ShapeNinja: React.FC = () => {
     bloodSpots.current = [];
     // ensure game is started
     setGameStarted(true);
+    // Reset session tracking
+    sessionStartTime.current = Date.now();
+    failsCount.current = 0;
   };
+
+  /* ---------------- SAVE GAME SESSION ---------------- */
+  useEffect(() => {
+    return () => {
+      // Save session on unmount
+      if (!gameStarted) return; // Don't save if game never started
+      
+      try {
+        const currentSession = localStorage.getItem('currentVisionTherapySession');
+        if (!currentSession) return;
+        
+        const sessionData = JSON.parse(currentSession);
+        const duration = Date.now() - sessionStartTime.current;
+        const completedSession = {
+          ...sessionData,
+          endTime: new Date().toISOString(),
+          duration: Math.round(duration / 60000), // Convert to minutes
+          durationMs: duration,
+          score: score,
+          fails: failsCount.current,
+          misses: misses,
+          completed: !gameOver || score > 0
+        };
+        
+        // Get existing sessions
+        const sessionsStr = localStorage.getItem('visionTherapySessions') || '[]';
+        const sessions = JSON.parse(sessionsStr);
+        sessions.push(completedSession);
+        
+        // Save back
+        localStorage.setItem('visionTherapySessions', JSON.stringify(sessions));
+        localStorage.removeItem('currentVisionTherapySession');
+      } catch (error) {
+        console.error('Error saving vision therapy session:', error);
+      }
+    };
+  }, [score, misses, gameOver, gameStarted]);
 
   return (
     <>
