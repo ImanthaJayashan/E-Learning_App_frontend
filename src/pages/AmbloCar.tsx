@@ -28,6 +28,71 @@ const AmbloCar: React.FC = () => {
 
   const sessionStartTime = useRef(Date.now());
   const failsCount = useRef(0);
+  const mongoSavedRef = useRef(false);
+
+  const saveGameSessionToMongoDB = async (status: "won" | "lost") => {
+    try {
+      const userId = localStorage.getItem("userId") || `guest_${Date.now()}`;
+      const sessionData = {
+        userId,
+        gameType: "amblocar",
+        score,
+        elapsedTime: time,
+        level,
+        fails: failsCount.current,
+        gameStatus: status,
+        sessionStartTime: new Date(sessionStartTime.current).toISOString(),
+        sessionEndTime: new Date().toISOString(),
+        timestamp: new Date().toISOString(),
+      };
+
+      const res = await fetch("/api/games/save-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(sessionData),
+      });
+
+      if (!res.ok) {
+        const msg = await res.text();
+        console.error("Failed to save AmbloCar session:", msg);
+      }
+    } catch (error) {
+      console.error("Error saving AmbloCar session to MongoDB:", error);
+    }
+  };
+
+  const saveTherapySessionToMongoDB = async (completedSession: any) => {
+    try {
+      const userId = localStorage.getItem('userId') || 'guest';
+      const payload = {
+        userId,
+        gameTitle: completedSession.gameTitle || 'AmbloCar',
+        startTime: completedSession.startTime || new Date(sessionStartTime.current).toISOString(),
+        endTime: completedSession.endTime,
+        duration: completedSession.duration,
+        durationMs: completedSession.durationMs,
+        score: completedSession.score,
+        fails: completedSession.fails,
+        level: completedSession.level,
+        completed: completedSession.completed,
+        route: completedSession.route,
+        icon: completedSession.icon,
+      };
+
+      const res = await fetch('/api/therapy/save-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const msg = await res.text();
+        console.error('Failed to save therapy session:', msg);
+      }
+    } catch (error) {
+      console.error('Error saving therapy session to MongoDB:', error);
+    }
+  };
 
   const size = useRef({ w: window.innerWidth, h: window.innerHeight });
   // Lane positions kept inside the white road area (top buffer 160px, bottom buffer 160px)
@@ -336,11 +401,19 @@ const AmbloCar: React.FC = () => {
         // Save back
         localStorage.setItem('visionTherapySessions', JSON.stringify(sessions));
         localStorage.removeItem('currentVisionTherapySession');
+        saveTherapySessionToMongoDB(completedSession);
       } catch (error) {
         console.error('Error saving vision therapy session:', error);
       }
     };
   }, [score, level, gameWon]);
+
+  useEffect(() => {
+    if ((gameOver || gameWon) && !mongoSavedRef.current) {
+      mongoSavedRef.current = true;
+      saveGameSessionToMongoDB(gameWon ? "won" : "lost");
+    }
+  }, [gameOver, gameWon, score, level, time]);
 
   /* ---------------- RESET ---------------- */
   const resetGame = () => {
@@ -354,6 +427,9 @@ const AmbloCar: React.FC = () => {
     vehicles.current = getLevelConfig(1);
     man.current.y = size.current.h - 80;
     manStep.current = false;
+    mongoSavedRef.current = false;
+    sessionStartTime.current = Date.now();
+    failsCount.current = 0;
   };
 
   const nextLevel = () => {

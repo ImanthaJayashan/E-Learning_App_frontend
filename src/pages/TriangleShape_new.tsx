@@ -23,6 +23,24 @@ const trackLearningTime = (timeKey: string, countKey: string, lastVisitKey: stri
     const existing = Number(localStorage.getItem(timeKey) || "0");
     localStorage.setItem(timeKey, String(existing + elapsedMs));
     localStorage.setItem("learningLastUpdated", new Date().toISOString());
+    
+    // Save to MongoDB
+    const userId = localStorage.getItem('userId');
+    if (userId) {
+      const shapeName = timeKey.replace('learningTime_', ''); // Extract shape name from key
+      fetch('http://localhost:5001/api/stats/learning', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          [shapeName]: {
+            timeSpent: existing + elapsedMs,
+            visits: Number(localStorage.getItem(countKey) || "0"),
+            lastVisit: new Date().toISOString()
+          }
+        })
+      }).catch(err => console.error('Failed to save learning stats:', err));
+    }
   };
 };
 

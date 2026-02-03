@@ -35,6 +35,38 @@ const SnakeGame: React.FC = () => {
   // Vision therapy session tracking
   const sessionStartTime = useRef(Date.now());
   const failsCount = useRef(0); // Track self-collisions
+  const mongoSavedRef = useRef(false);
+
+  const saveGameSessionToMongoDB = async () => {
+    try {
+      const userId = localStorage.getItem("userId") || `guest_${Date.now()}`;
+      const sessionData = {
+        userId,
+        gameType: "snake_game",
+        score,
+        elapsedTime: time,
+        foodsEaten,
+        fails: failsCount.current,
+        gameStatus: "game_over",
+        sessionStartTime: new Date(sessionStartTime.current).toISOString(),
+        sessionEndTime: new Date().toISOString(),
+        timestamp: new Date().toISOString(),
+      };
+
+      const res = await fetch("/api/games/save-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(sessionData),
+      });
+
+      if (!res.ok) {
+        const msg = await res.text();
+        console.error("Failed to save Snake session:", msg);
+      }
+    } catch (error) {
+      console.error("Error saving Snake session to MongoDB:", error);
+    }
+  };
 
   /* ---------------- Full Screen Resize ---------------- */
   useEffect(() => {
@@ -294,6 +326,7 @@ const SnakeGame: React.FC = () => {
     // Reset tracking for new session
     sessionStartTime.current = Date.now();
     failsCount.current = 0;
+    mongoSavedRef.current = false;
   };
 
   // Save session data on component unmount
@@ -321,9 +354,17 @@ const SnakeGame: React.FC = () => {
         existingSessions.push(completedSession);
         localStorage.setItem('visionTherapySessions', JSON.stringify(existingSessions));
         localStorage.removeItem('currentVisionTherapySession');
+        saveTherapySessionToMongoDB(completedSession);
       }
     };
   }, [score, foodsEaten]);
+
+  useEffect(() => {
+    if (gameOver && !mongoSavedRef.current) {
+      mongoSavedRef.current = true;
+      saveGameSessionToMongoDB();
+    }
+  }, [gameOver, score, foodsEaten, time]);
 
   return (
     <div style={{ width: "100vw", height: "100vh", background: "#f9fafb" }}>

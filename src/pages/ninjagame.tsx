@@ -81,6 +81,71 @@ const ShapeNinja: React.FC = () => {
   const sessionStartTime = useRef(Date.now());
   const failsCount = useRef(0);
 
+  const saveGameSessionToMongoDB = async () => {
+    try {
+      const userId = localStorage.getItem('userId') || 'guest';
+      const sessionData = {
+        userId,
+        gameType: "ninja_game",
+        score,
+        targetShape,
+        elapsedTime,
+        misses,
+        fails: failsCount.current,
+        sessionStartTime: new Date(sessionStartTime.current).toISOString(),
+        sessionEndTime: new Date().toISOString(),
+        gameStatus: gameOver ? "game_over" : "running",
+        timestamp: new Date().toISOString(),
+      };
+
+      const res = await fetch('/api/games/save-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(sessionData),
+      });
+
+      if (!res.ok) {
+        const msg = await res.text();
+        console.error('Failed to save Ninja game session:', msg);
+      }
+    } catch (error) {
+      console.error('Error saving Ninja game session to MongoDB:', error);
+    }
+  };
+
+  const saveTherapySessionToMongoDB = async (completedSession: any) => {
+    try {
+      const userId = localStorage.getItem('userId') || 'guest';
+      const payload = {
+        userId,
+        gameTitle: completedSession.gameTitle || 'Ninja Game',
+        startTime: completedSession.startTime || new Date(sessionStartTime.current).toISOString(),
+        endTime: completedSession.endTime,
+        duration: completedSession.duration,
+        durationMs: completedSession.durationMs,
+        score: completedSession.score,
+        fails: completedSession.fails,
+        misses: completedSession.misses,
+        completed: completedSession.completed,
+        route: completedSession.route,
+        icon: completedSession.icon,
+      };
+
+      const res = await fetch('/api/therapy/save-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const msg = await res.text();
+        console.error('Failed to save therapy session:', msg);
+      }
+    } catch (error) {
+      console.error('Error saving therapy session to MongoDB:', error);
+    }
+  };
+
   const playMissSound = async () => {
     try {
       const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
@@ -529,6 +594,7 @@ const ShapeNinja: React.FC = () => {
         // Save back
         localStorage.setItem('visionTherapySessions', JSON.stringify(sessions));
         localStorage.removeItem('currentVisionTherapySession');
+        saveTherapySessionToMongoDB(completedSession);
       } catch (error) {
         console.error('Error saving vision therapy session:', error);
       }

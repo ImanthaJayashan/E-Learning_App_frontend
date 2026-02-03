@@ -83,6 +83,8 @@ const captureAndSend = async () => {
 
   const formData = new FormData();
   formData.append("image", blob, "frame.jpg");
+  const userId = localStorage.getItem("userId") || "guest";
+  formData.append("userId", userId);
 
   try {
     const res = await fetch(predictUrl, {
