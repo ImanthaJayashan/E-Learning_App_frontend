@@ -535,6 +535,13 @@ const ShapeNinja: React.FC = () => {
     };
   }, [score, misses, gameOver, gameStarted]);
 
+  // Save to MongoDB when game ends
+  useEffect(() => {
+    if (gameOver) {
+      saveGameSessionToMongoDB();
+    }
+  }, [gameOver]);
+
   return (
     <>
       {/* GAME OVER OVERLAY */}
@@ -566,6 +573,7 @@ const ShapeNinja: React.FC = () => {
             <h2 style={{ fontSize: "2.2rem", margin: 0, marginBottom: "0.25rem" }}>GAME OVER</h2>
             <p style={{ margin: 0, color: "#6b7280", marginBottom: "1rem" }}>You missed 5 times</p>
             <p style={{ margin: 0, fontWeight: 700, marginBottom: "1.5rem" }}>Score: {score}</p>
+            <p style={{ margin: 0, fontSize: "0.85rem", color: "#10b981", marginBottom: "1.5rem" }}>✓ Game session saved to MongoDB</p>
             <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center" }}>
               <button
                 onClick={restartGame}
