@@ -32,6 +32,42 @@ const SnakeGame: React.FC = () => {
   const [foodsEaten, setFoodsEaten] = useState(0);
   const pulse = useRef(0);
 
+  // Vision therapy session tracking
+  const sessionStartTime = useRef(Date.now());
+  const failsCount = useRef(0); // Track self-collisions
+  const mongoSavedRef = useRef(false);
+
+  const saveGameSessionToMongoDB = async () => {
+    try {
+      const userId = localStorage.getItem("userId") || `guest_${Date.now()}`;
+      const sessionData = {
+        userId,
+        gameType: "snake_game",
+        score,
+        elapsedTime: time,
+        foodsEaten,
+        fails: failsCount.current,
+        gameStatus: "game_over",
+        sessionStartTime: new Date(sessionStartTime.current).toISOString(),
+        sessionEndTime: new Date().toISOString(),
+        timestamp: new Date().toISOString(),
+      };
+
+      const res = await fetch("/api/games/save-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(sessionData),
+      });
+
+      if (!res.ok) {
+        const msg = await res.text();
+        console.error("Failed to save Snake session:", msg);
+      }
+    } catch (error) {
+      console.error("Error saving Snake session to MongoDB:", error);
+    }
+  };
+
   /* ---------------- Full Screen Resize ---------------- */
   useEffect(() => {
     const resize = () => {
@@ -100,6 +136,7 @@ const SnakeGame: React.FC = () => {
 
         if (prev.some(p => p.x === newHead.x && p.y === newHead.y)) {
           setGameOver(true);
+          failsCount.current += 1; // Track self-collision as fail
           return prev;
         }
 
@@ -285,7 +322,49 @@ const SnakeGame: React.FC = () => {
     setFoodsEaten(0);
     setGameOver(false);
     generateFood([{ x: 5, y: 5 }]);
+    
+    // Reset tracking for new session
+    sessionStartTime.current = Date.now();
+    failsCount.current = 0;
+    mongoSavedRef.current = false;
   };
+
+  // Save session data on component unmount
+  useEffect(() => {
+    return () => {
+      const currentSession = localStorage.getItem('currentVisionTherapySession');
+      if (currentSession) {
+        const session = JSON.parse(currentSession);
+        const endTime = Date.now();
+        const durationMs = endTime - sessionStartTime.current;
+        const durationMinutes = Math.round(durationMs / 60000);
+
+        const completedSession = {
+          ...session,
+          endTime,
+          duration: `${durationMinutes} min`,
+          durationMs,
+          score,
+          fails: failsCount.current,
+          foodsEaten,
+          completed: score > 0, // Completed if they ate at least 1 food
+        };
+
+        const existingSessions = JSON.parse(localStorage.getItem('visionTherapySessions') || '[]');
+        existingSessions.push(completedSession);
+        localStorage.setItem('visionTherapySessions', JSON.stringify(existingSessions));
+        localStorage.removeItem('currentVisionTherapySession');
+        saveTherapySessionToMongoDB(completedSession);
+      }
+    };
+  }, [score, foodsEaten]);
+
+  useEffect(() => {
+    if (gameOver && !mongoSavedRef.current) {
+      mongoSavedRef.current = true;
+      saveGameSessionToMongoDB();
+    }
+  }, [gameOver, score, foodsEaten, time]);
 
   return (
     <div style={{ width: "100vw", height: "100vh", background: "#f9fafb" }}>

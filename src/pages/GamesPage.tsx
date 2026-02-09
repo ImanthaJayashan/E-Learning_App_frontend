@@ -28,6 +28,16 @@ const GamesPage: React.FC = () => {
     // First show selection square
     setSelectedGame({ title: gameTitle, icon, color1, color2 });
     
+    // Track vision therapy session
+    const sessionData = {
+      gameTitle,
+      startTime: new Date().toISOString(),
+      timestamp: new Date().toISOString(),
+      route,
+      icon
+    };
+    localStorage.setItem('currentVisionTherapySession', JSON.stringify(sessionData));
+    
     // Then navigate after delay
     setTimeout(() => {
       setIsLoading(true);

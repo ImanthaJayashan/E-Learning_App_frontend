@@ -11,10 +11,81 @@ import Button from '@mui/material/Button';
 import CardActionArea from '@mui/material/CardActionArea';
 import CardActions from '@mui/material/CardActions';
 
+const trackLearningTime = (timeKey: string, countKey: string, lastVisitKey: string) => {
+  const start = Date.now();
+  const nowIso = new Date().toISOString();
+  const currentCount = Number(localStorage.getItem(countKey) || "0");
+  localStorage.setItem(countKey, String(currentCount + 1));
+  localStorage.setItem(lastVisitKey, nowIso);
+  localStorage.setItem("learningLastUpdated", nowIso);
+  return () => {
+    const elapsedMs = Date.now() - start;
+    const existing = Number(localStorage.getItem(timeKey) || "0");
+    localStorage.setItem(timeKey, String(existing + elapsedMs));
+    localStorage.setItem("learningLastUpdated", new Date().toISOString());
+    
+    // Save to MongoDB
+    const userId = localStorage.getItem('userId');
+    if (userId) {
+      const shapeName = timeKey.replace('learningTime_', ''); // Extract shape name from key
+      fetch('http://localhost:5001/api/stats/learning', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          [shapeName]: {
+            timeSpent: existing + elapsedMs,
+            visits: Number(localStorage.getItem(countKey) || "0"),
+            lastVisit: new Date().toISOString()
+          }
+        })
+      }).catch(err => console.error('Failed to save learning stats:', err));
+    }
+  };
+};
+
+const saveVisionTherapySession = (duration: number) => {
+  try {
+    const currentSession = localStorage.getItem('currentVisionTherapySession');
+    if (!currentSession) return;
+    
+    const sessionData = JSON.parse(currentSession);
+    const completedSession = {
+      ...sessionData,
+      endTime: new Date().toISOString(),
+      duration: Math.round(duration / 60000), // Convert to minutes
+      durationMs: duration
+    };
+    
+    // Get existing sessions
+    const sessionsStr = localStorage.getItem('visionTherapySessions') || '[]';
+    const sessions = JSON.parse(sessionsStr);
+    sessions.push(completedSession);
+    
+    // Save back
+    localStorage.setItem('visionTherapySessions', JSON.stringify(sessions));
+    localStorage.removeItem('currentVisionTherapySession');
+  } catch (error) {
+    console.error('Error saving vision therapy session:', error);
+  }
+};
+
 const CircleShape: React.FC = () => {
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
   const [show3DCircle, setShow3DCircle] = useState(false);
+
+  useEffect(() => {
+    const stopTracking = trackLearningTime("learningTime_triangle", "learningVisits_triangle", "learningLastVisit_triangle");
+    const sessionStart = Date.now();
+    
+    return () => {
+      stopTracking();
+      // Save vision therapy session if this was part of therapy
+      const sessionDuration = Date.now() - sessionStart;
+      saveVisionTherapySession(sessionDuration);
+    };
+  }, []);
   
   // Preschool Game State
   const gameCanvasRef = useRef<HTMLCanvasElement>(null);

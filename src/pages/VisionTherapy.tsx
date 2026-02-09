@@ -17,7 +17,19 @@ const VisionTherapy: React.FC = () => {
       top: Math.random() * 30 + 20,
     }));
     setButterflyPositions(butterflies);
+
+    // Initialize vision therapy data if not exists
+    if (!localStorage.getItem('visionTherapySessions')) {
+      localStorage.setItem('visionTherapySessions', JSON.stringify([]));
+    }
   }, []);
+
+  const handleStartTherapy = () => {
+    // Mark that therapy has been started
+    localStorage.setItem('visionTherapyStarted', 'true');
+    localStorage.setItem('visionTherapyStartDate', new Date().toISOString());
+    navigate("/games");
+  };
 
   const styles = `
     @keyframes fadeInScale {
@@ -300,7 +312,7 @@ const VisionTherapy: React.FC = () => {
           <button
             type="button"
             className="go-text go-button"
-            onClick={() => navigate("/games")}
+            onClick={handleStartTherapy}
             aria-label="Start vision therapy"
           >
             GO!

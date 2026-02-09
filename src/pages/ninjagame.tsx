@@ -78,6 +78,74 @@ const ShapeNinja: React.FC = () => {
   const gameOverRef = useRef(false);
   const audioCtxRef = useRef<AudioContext | null>(null);
 
+  const sessionStartTime = useRef(Date.now());
+  const failsCount = useRef(0);
+
+  const saveGameSessionToMongoDB = async () => {
+    try {
+      const userId = localStorage.getItem('userId') || 'guest';
+      const sessionData = {
+        userId,
+        gameType: "ninja_game",
+        score,
+        targetShape,
+        elapsedTime,
+        misses,
+        fails: failsCount.current,
+        sessionStartTime: new Date(sessionStartTime.current).toISOString(),
+        sessionEndTime: new Date().toISOString(),
+        gameStatus: gameOver ? "game_over" : "running",
+        timestamp: new Date().toISOString(),
+      };
+
+      const res = await fetch('/api/games/save-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(sessionData),
+      });
+
+      if (!res.ok) {
+        const msg = await res.text();
+        console.error('Failed to save Ninja game session:', msg);
+      }
+    } catch (error) {
+      console.error('Error saving Ninja game session to MongoDB:', error);
+    }
+  };
+
+  const saveTherapySessionToMongoDB = async (completedSession: any) => {
+    try {
+      const userId = localStorage.getItem('userId') || 'guest';
+      const payload = {
+        userId,
+        gameTitle: completedSession.gameTitle || 'Ninja Game',
+        startTime: completedSession.startTime || new Date(sessionStartTime.current).toISOString(),
+        endTime: completedSession.endTime,
+        duration: completedSession.duration,
+        durationMs: completedSession.durationMs,
+        score: completedSession.score,
+        fails: completedSession.fails,
+        misses: completedSession.misses,
+        completed: completedSession.completed,
+        route: completedSession.route,
+        icon: completedSession.icon,
+      };
+
+      const res = await fetch('/api/therapy/save-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const msg = await res.text();
+        console.error('Failed to save therapy session:', msg);
+      }
+    } catch (error) {
+      console.error('Error saving therapy session to MongoDB:', error);
+    }
+  };
+
   const playMissSound = async () => {
     try {
       const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
@@ -276,6 +344,7 @@ const ShapeNinja: React.FC = () => {
             setScore((prev) => prev + 1);
           } else {
             // Wrong shape sliced!
+            failsCount.current += 1;
             setScore((prev) => Math.max(0, prev - 2)); // Decrease by 2, minimum 0
             playMissSound();
             setWrongShapeType(s.type);
@@ -489,7 +558,55 @@ const ShapeNinja: React.FC = () => {
     bloodSpots.current = [];
     // ensure game is started
     setGameStarted(true);
+    // Reset session tracking
+    sessionStartTime.current = Date.now();
+    failsCount.current = 0;
   };
+
+  /* ---------------- SAVE GAME SESSION ---------------- */
+  useEffect(() => {
+    return () => {
+      // Save session on unmount
+      if (!gameStarted) return; // Don't save if game never started
+      
+      try {
+        const currentSession = localStorage.getItem('currentVisionTherapySession');
+        if (!currentSession) return;
+        
+        const sessionData = JSON.parse(currentSession);
+        const duration = Date.now() - sessionStartTime.current;
+        const completedSession = {
+          ...sessionData,
+          endTime: new Date().toISOString(),
+          duration: Math.round(duration / 60000), // Convert to minutes
+          durationMs: duration,
+          score: score,
+          fails: failsCount.current,
+          misses: misses,
+          completed: !gameOver || score > 0
+        };
+        
+        // Get existing sessions
+        const sessionsStr = localStorage.getItem('visionTherapySessions') || '[]';
+        const sessions = JSON.parse(sessionsStr);
+        sessions.push(completedSession);
+        
+        // Save back
+        localStorage.setItem('visionTherapySessions', JSON.stringify(sessions));
+        localStorage.removeItem('currentVisionTherapySession');
+        saveTherapySessionToMongoDB(completedSession);
+      } catch (error) {
+        console.error('Error saving vision therapy session:', error);
+      }
+    };
+  }, [score, misses, gameOver, gameStarted]);
+
+  // Save to MongoDB when game ends
+  useEffect(() => {
+    if (gameOver) {
+      saveGameSessionToMongoDB();
+    }
+  }, [gameOver]);
 
   return (
     <>
@@ -522,6 +639,7 @@ const ShapeNinja: React.FC = () => {
             <h2 style={{ fontSize: "2.2rem", margin: 0, marginBottom: "0.25rem" }}>GAME OVER</h2>
             <p style={{ margin: 0, color: "#6b7280", marginBottom: "1rem" }}>You missed 5 times</p>
             <p style={{ margin: 0, fontWeight: 700, marginBottom: "1.5rem" }}>Score: {score}</p>
+            <p style={{ margin: 0, fontSize: "0.85rem", color: "#10b981", marginBottom: "1.5rem" }}>✓ Game session saved to MongoDB</p>
             <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center" }}>
               <button
                 onClick={restartGame}
