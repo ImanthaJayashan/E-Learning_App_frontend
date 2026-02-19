@@ -13,6 +13,9 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
+    "@mediapipe/camera_utils": "^0.3.1675466862",
+    "@mediapipe/drawing_utils": "^0.3.1675466124",
+    "@mediapipe/face_detection": "^0.4.1646425229",
     "@mui/material": "^7.3.6",
     "framer-motion": "^12.23.26",
     "phaser": "^3.90.0",
