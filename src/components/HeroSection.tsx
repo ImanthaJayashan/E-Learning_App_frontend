@@ -14,7 +14,7 @@ const HeroSection: React.FC = () => {
       <div className="hero-container">
         <div className="hero-content">
           <p className="hero-subtitle">E-learning online</p>
-          <h1 className="hero-title">Secure Learning & Health Monitoring</h1>
+          <h1 className="hero-title">Let’s Learn & Play Together!</h1>
           <p className="hero-description">Discover a world of the interactive learning experience combined with intelligent health monitoring system for young learners.</p>
           <button className="hero-cta">Learn more</button>
         </div>
