@@ -21,6 +21,25 @@ const ParentsDashboard: React.FC = () => {
   const apiBase = (import.meta as any).env?.VITE_BACKEND_URL?.replace(/\/$/, "") || "";
   const latestUrl = apiBase ? `${apiBase}/latest` : "/api/latest";
   const historyUrl = apiBase ? `${apiBase}/history` : "/api/history";
+  const minConfidence = 0.55;
+  const minSmoothCount = 3;
+  const maxStaleMs = 15000;
+
+  const normalizeEyeResult = (data: any) => {
+    if (!data || data.message === "no results yet") return null;
+    const label = data.smooth_label ?? data.label;
+    const confidence = data.smooth_confidence ?? data.confidence;
+    const smoothCount = data.smooth_count ?? 0;
+    const isUncertain = Boolean(data.is_uncertain);
+    const timestamp = data.timestamp ? new Date(data.timestamp).getTime() : null;
+    const isStale = timestamp ? Date.now() - timestamp > maxStaleMs : false;
+
+    if (!label || typeof confidence !== "number" || isUncertain || isStale) return null;
+    if (data.smooth_label && smoothCount < minSmoothCount) return null;
+    if (confidence < minConfidence) return null;
+
+    return { ...data, label, confidence };
+  };
 
   useEffect(() => {
     if (activeTab !== "eye") return;
@@ -32,16 +51,25 @@ const ParentsDashboard: React.FC = () => {
         if (!res.ok) throw new Error("No data");
         const data = await res.json();
         if (!isMounted) return;
-        setLatestEyeResult(data);
-        setEyeStatus("Live updates");
+        const normalized = normalizeEyeResult(data);
+        if (normalized) {
+          setLatestEyeResult(normalized);
+          setEyeStatus("Live updates");
+        } else {
+          setEyeStatus("Waiting for detection...");
+        }
       } catch {
         if (!isMounted) return;
         const cached = localStorage.getItem("latestEyeDetection");
         if (cached) {
-          setLatestEyeResult(JSON.parse(cached));
-          setEyeStatus("Local cache");
+          const normalized = normalizeEyeResult(JSON.parse(cached));
+          if (normalized) {
+            setLatestEyeResult(normalized);
+            setEyeStatus("Local cache");
+          } else {
+            setEyeStatus("Waiting for detection...");
+          }
         } else {
-          setLatestEyeResult(null);
           setEyeStatus("Waiting for detection...");
         }
       }
@@ -150,6 +178,83 @@ const ParentsDashboard: React.FC = () => {
     });
   };
 
+  const formatRangeDate = (iso: string | null) => {
+    if (!iso) return "N/A";
+    const parsed = new Date(iso);
+    if (Number.isNaN(parsed.getTime())) return "N/A";
+    return parsed.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      timeZone: "Asia/Colombo",
+    });
+  };
+
+  const historyRecords = Array.isArray(historyData?.records) ? historyData.records : [];
+  const validHistoryRecords = historyRecords
+    .map((record: any) => ({
+      ...record,
+      parsedTime: record?.timestamp ? new Date(record.timestamp).getTime() : NaN,
+    }))
+    .filter((record: any) => Number.isFinite(record.parsedTime));
+
+  const periodStartIso = validHistoryRecords.length > 0
+    ? new Date(Math.min(...validHistoryRecords.map((record: any) => record.parsedTime))).toISOString()
+    : null;
+  const periodEndIso = validHistoryRecords.length > 0
+    ? new Date(Math.max(...validHistoryRecords.map((record: any) => record.parsedTime))).toISOString()
+    : null;
+
+  const normalChecks = historyData?.daily_summary?.reduce(
+    (total: number, day: any) => total + (day.normal_count || 0),
+    0
+  ) || 0;
+  const attentionChecks = historyData?.daily_summary?.reduce(
+    (total: number, day: any) => total + (day.lazy_eye_count || 0),
+    0
+  ) || 0;
+  const hasHistoryForHealth = validHistoryRecords.length > 0;
+
+  const overallEyeHealth = hasHistoryForHealth
+    ? attentionChecks === 0
+      ? {
+        icon: "✅",
+        title: "All Systems Normal",
+        message: "No concerning patterns detected across selected days",
+        bgColor: "#f0fdf4",
+        borderColor: "#10b981",
+        titleColor: "#10b981",
+        messageColor: "#059669",
+      }
+      : normalChecks >= attentionChecks
+        ? {
+          icon: "⚠️",
+          title: "Mostly Normal",
+          message: "Some attention-needed patterns observed in selected days",
+          bgColor: "#fffbeb",
+          borderColor: "#f59e0b",
+          titleColor: "#d97706",
+          messageColor: "#b45309",
+        }
+        : {
+          icon: "🚨",
+          title: "Attention Needed",
+          message: "Concerning patterns are dominant in selected days",
+          bgColor: "#fef2f2",
+          borderColor: "#ef4444",
+          titleColor: "#dc2626",
+          messageColor: "#b91c1c",
+        }
+    : {
+      icon: "ℹ️",
+      title: "Not Enough Data",
+      message: "No valid checks found for selected days",
+      bgColor: "#f3f4f6",
+      borderColor: "#9ca3af",
+      titleColor: "#4b5563",
+      messageColor: "#6b7280",
+    };
+
   const StatCard = ({ icon, title, value, change, color }: any) => (
     <div style={{
       background: `linear-gradient(135deg, ${color}20 0%, ${color}10 100%)`,
@@ -177,30 +282,6 @@ const ParentsDashboard: React.FC = () => {
       </div>
       <h4 style={{ margin: "0 0 8px 0", color: "#333", fontSize: "0.9rem", fontWeight: "600" }}>{title}</h4>
       <p style={{ margin: "0", color: color, fontSize: "1.8rem", fontWeight: "bold" }}>{value}</p>
-    </div>
-  );
-
-  const ProgressBar = ({ label, percentage, color }: any) => (
-    <div style={{ marginBottom: "16px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-        <span style={{ color: "#333", fontWeight: "500", fontSize: "0.9rem" }}>{label}</span>
-        <span style={{ color: color, fontWeight: "bold", fontSize: "0.85rem" }}>{percentage}%</span>
-      </div>
-      <div style={{
-        width: "100%",
-        height: "8px",
-        backgroundColor: "#e5e7eb",
-        borderRadius: "4px",
-        overflow: "hidden"
-      }}>
-        <div style={{
-          width: `${percentage}%`,
-          height: "100%",
-          background: `linear-gradient(90deg, ${color}80, ${color})`,
-          borderRadius: "4px",
-          transition: "width 0.4s ease"
-        }} />
-      </div>
     </div>
   );
 
@@ -1074,22 +1155,24 @@ const ParentsDashboard: React.FC = () => {
                   💚 Health Status
                 </h3>
                 <div style={{
-                  backgroundColor: "#f0fdf4",
-                  border: "2px solid #10b981",
+                  backgroundColor: overallEyeHealth.bgColor,
+                  border: `2px solid ${overallEyeHealth.borderColor}`,
                   padding: "16px",
                   borderRadius: "12px",
                   marginBottom: "12px"
                 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-                    <span style={{ fontSize: "1.5rem" }}>✅</span>
-                    <span style={{ fontSize: "1rem", fontWeight: "bold", color: "#10b981" }}>All Systems Normal</span>
+                    <span style={{ fontSize: "1.5rem" }}>{overallEyeHealth.icon}</span>
+                    <span style={{ fontSize: "1rem", fontWeight: "bold", color: overallEyeHealth.titleColor }}>
+                      {overallEyeHealth.title}
+                    </span>
                   </div>
-                  <p style={{ color: "#059669", fontSize: "0.85rem", margin: "0" }}>
-                    No concerning patterns detected
+                  <p style={{ color: overallEyeHealth.messageColor, fontSize: "0.85rem", margin: "0" }}>
+                    {overallEyeHealth.message}
                   </p>
                 </div>
                 <p style={{ color: "#666", fontSize: "0.85rem", margin: "0" }}>
-                  Last health check: 2 hours ago
+                  Valid result period: {formatRangeDate(periodStartIso)} - {formatRangeDate(periodEndIso)}
                 </p>
               </div>
 
