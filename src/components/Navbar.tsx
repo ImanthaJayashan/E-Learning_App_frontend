@@ -19,7 +19,7 @@ export default function Navbar() {
             Tutorials
           </button>
           <button
-            onClick={() => alert("Quiz page coming soon!")}
+            onClick={() => nav("/quiz")}
             className="bg-kidpink text-white px-4 py-2 rounded-full font-bold shadow"
           >
             Start Quiz
