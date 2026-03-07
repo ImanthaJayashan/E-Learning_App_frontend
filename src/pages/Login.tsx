@@ -4,6 +4,14 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfi
 import { auth } from "../firebase.ts";
 import "./Login.css";
 
+type NotificationType = 'success' | 'error' | 'info';
+
+interface Notification {
+    message: string;
+    type: NotificationType;
+    id: number;
+}
+
 const Login: React.FC = () => {
     const [isLogin, setIsLogin] = useState(true);
     const [displayName, setDisplayName] = useState("");
@@ -14,6 +22,9 @@ const Login: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [phoneError, setPhoneError] = useState("");
+    const [passwordStrength, setPasswordStrength] = useState<{ level: string; color: string; text: string }>({ level: '', color: '', text: '' });
 
     // parent contact info (signup only)
     const [primaryName, setPrimaryName] = useState("");
@@ -26,25 +37,92 @@ const Login: React.FC = () => {
     const [secondaryAddress, setSecondaryAddress] = useState("");
     const navigate = useNavigate();
 
+    const showNotification = (message: string, type: NotificationType) => {
+        const id = Date.now();
+        setNotifications(prev => [...prev, { message, type, id }]);
+        setTimeout(() => {
+            setNotifications(prev => prev.filter(n => n.id !== id));
+        }, 4000);
+    };
+
+    const validateEmail = (email: string): boolean => {
+        // Email must contain @ symbol
+        if (!email.includes('@')) return false;
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    };
+
+    const validatePhone = (phone: string): boolean => {
+        if (!phone.trim()) return true; // Optional field
+        // Must be exactly 10 digits, numbers only
+        return /^[0-9]{10}$/.test(phone.trim());
+    };
+
+    const validateName = (name: string): boolean => {
+        return name.trim().length >= 2 && /^[a-zA-Z\s]+$/.test(name);
+    };
+
+    const handlePhoneChange = (value: string, setter: (val: string) => void) => {
+        // Check if there are any non-digit characters
+        if (value && /[^0-9]/.test(value)) {
+            setPhoneError("⚠️ Please enter numbers only");
+            setTimeout(() => setPhoneError(""), 2000);
+        }
+        // Only allow digits and limit to 10 characters
+        const filtered = value.replace(/\D/g, '').slice(0, 10);
+        setter(filtered);
+    };
+
+    const calculatePasswordStrength = (pwd: string) => {
+        if (!pwd) {
+            setPasswordStrength({ level: '', color: '', text: '' });
+            return;
+        }
+
+        let strength = 0;
+        
+        // Length check
+        if (pwd.length >= 6) strength++;
+        if (pwd.length >= 8) strength++;
+        if (pwd.length >= 12) strength++;
+        
+        // Character variety checks
+        if (/[a-z]/.test(pwd)) strength++; // lowercase
+        if (/[A-Z]/.test(pwd)) strength++; // uppercase
+        if (/[0-9]/.test(pwd)) strength++; // numbers
+        if (/[^a-zA-Z0-9]/.test(pwd)) strength++; // special characters
+
+        // Determine strength level
+        if (strength <= 2) {
+            setPasswordStrength({ level: 'weak', color: '#e74c3c', text: '🔒 Weak' });
+        } else if (strength <= 4) {
+            setPasswordStrength({ level: 'medium', color: '#f39c12', text: '🔐 Medium' });
+        } else {
+            setPasswordStrength({ level: 'strong', color: '#27ae60', text: '🔐 Strong' });
+        }
+    };
+
     const handleLogin = async () => {
         try {
-            if (!email.trim() || !password.trim()) {
-                setError("Email and password are required");
+            // Validation
+            if (!email.trim()) {
+                setError("Email is required");
                 return;
             }
 
-            if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-                setError("Please enter a valid email");
+            if (!password.trim()) {
+                setError("Password is required");
                 return;
             }
 
-            setLoading(true);
-            setError("");
+            if (!validateEmail(email)) {
+                showNotification("Email must contain @ symbol and be valid (e.g., user@example.com)", "error");
+                return;
+            }
 
             // Sign in with Firebase
             await signInWithEmailAndPassword(auth, email.trim(), password);
 
-            alert("Login successful!");
+            showNotification("🎉 Login successful! Redirecting...", "success");
 
             // Store user info and avoid leaking a previous account profile into this login.
             try {
@@ -112,12 +190,29 @@ const Login: React.FC = () => {
 
     const handleSignUp = async () => {
         try {
-            if (!displayName.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
-                setError("All fields are required");
+            // Basic field validations
+            if (!displayName.trim()) {
+                setError("Full name is required");
                 return;
             }
-            if (!primaryName.trim() || !primaryEmail.trim()) {
-                setError("Primary parent name and email are required");
+
+            if (!validateName(displayName)) {
+                setError("Please enter a valid name (letters only, at least 2 characters)");
+                return;
+            }
+
+            if (!email.trim()) {
+                setError("Email is required");
+                return;
+            }
+
+            if (!validateEmail(email)) {
+                showNotification("Email must contain @ symbol and be valid (e.g., user@example.com)", "error");
+                return;
+            }
+
+            if (!password.trim()) {
+                setError("Password is required");
                 return;
             }
 
@@ -126,14 +221,60 @@ const Login: React.FC = () => {
                 return;
             }
 
+            if (!confirmPassword.trim()) {
+                setError("Please confirm your password");
+                return;
+            }
+
             if (password !== confirmPassword) {
                 setError("Passwords do not match");
                 return;
             }
 
-            if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-                setError("Please enter a valid email");
+            // Primary parent validations
+            if (!primaryName.trim()) {
+                setError("Primary parent name is required");
                 return;
+            }
+
+            if (!validateName(primaryName)) {
+                setError("Please enter a valid primary parent name");
+                return;
+            }
+
+            if (!primaryEmail.trim()) {
+                setError("Primary parent email is required");
+                return;
+            }
+
+            if (!validateEmail(primaryEmail)) {
+                showNotification("Primary parent email must contain @ symbol and be valid", "error");
+                return;
+            }
+
+            if (primaryPhone.trim() && !validatePhone(primaryPhone)) {
+                setError("Phone number must be exactly 10 digits (numbers only)");
+                return;
+            }
+
+            // Secondary parent validations (if any field is filled)
+            const hasSecondaryInfo = secondaryName.trim() || secondaryEmail.trim() || secondaryPhone.trim() || secondaryAddress.trim();
+            
+            if (hasSecondaryInfo) {
+                if (secondaryEmail.trim() && !validateEmail(secondaryEmail)) {
+                    showNotification("Secondary parent email must contain @ symbol and be valid", "error");
+                    return;
+                }
+
+                if (secondaryPhone.trim() && !validatePhone(secondaryPhone)) {
+                    setError("Phone number must be exactly 10 digits (numbers only)");
+                    return;
+                }
+
+                if (secondaryName.trim() && !validateName(secondaryName)) {
+                    setError("Please enter a valid secondary parent name");
+                    return;
+                }
             }
 
             setLoading(true);
@@ -146,7 +287,7 @@ const Login: React.FC = () => {
                 await updateProfile(auth.currentUser, { displayName: displayName.trim() });
             }
 
-            alert("Account created successfully!");
+            showNotification("✅ Account created successfully! Redirecting...", "success");
 
             // Store user info along with parent contact details
             const userObj: any = {
@@ -213,16 +354,25 @@ const Login: React.FC = () => {
         setSecondaryEmail("");
         setSecondaryPhone("");
         setSecondaryAddress("");
+        setPasswordStrength({ level: '', color: '', text: '' });
     };
 
     return (
         <div className="login-container">
+            {/* Notification Container */}
+            <div className="notification-container">
+                {notifications.map(notification => (
+                    <div key={notification.id} className={`notification notification-${notification.type}`}>
+                        <span>{notification.message}</span>
+                    </div>
+                ))}
+            </div>
+
             <div className="login-background">
                 <div className="login-card">
                     {/* Logo/Header */}
                     <div className="login-header">
                         <h1>E-Learning Hub</h1>
-                        <p>Vision Training & Eye Care</p>
                     </div>
 
                     {/* Form Title */}
@@ -261,7 +411,7 @@ const Login: React.FC = () => {
                                 </div>
 
                                 {/* Parent contact sections */}
-                                <h3 style={{ marginTop: 20, fontSize: '1rem', fontWeight: 'bold' }}>Primary Parent Information</h3>
+                                <h3 style={{ marginTop: 20, fontSize: '1rem', fontWeight: 'bold', color: '#667eea' }}>Primary Parent Information <span style={{ color: '#e74c3c' }}>*</span></h3>
                                 <div className="form-group">
                                     <label htmlFor="primaryName">Name</label>
                                     <input
@@ -285,18 +435,22 @@ const Login: React.FC = () => {
                                         disabled={loading}
                                         autoComplete="email"
                                     />
+                                    <small style={{ color: '#666', fontSize: '0.8rem' }}>Must contain @ symbol (e.g., parent@example.com)</small>
                                 </div>
                                 <div className="form-group">
-                                    <label htmlFor="primaryPhone">Phone</label>
+                                    <label htmlFor="primaryPhone">Phone (10 digits)</label>
                                     <input
                                         type="tel"
                                         id="primaryPhone"
                                         value={primaryPhone}
-                                        onChange={(e) => setPrimaryPhone(e.target.value)}
-                                        placeholder="e.g. +94 71 123 4567"
+                                        onChange={(e) => handlePhoneChange(e.target.value, setPrimaryPhone)}
+                                        placeholder="e.g. 0711234567"
                                         disabled={loading}
                                         autoComplete="tel"
+                                        maxLength={10}
+                                        pattern="[0-9]{10}"
                                     />
+                                    {phoneError && <div style={{ color: '#e74c3c', fontSize: '0.85rem', marginTop: '4px' }}>{phoneError}</div>}
                                 </div>
                                 <div className="form-group">
                                     <label htmlFor="primaryAddress">Address</label>
@@ -311,7 +465,7 @@ const Login: React.FC = () => {
                                     />
                                 </div>
 
-                                <h3 style={{ marginTop: 20, fontSize: '1rem', fontWeight: 'bold' }}>Secondary Parent (optional)</h3>
+                                <h3 style={{ marginTop: 20, fontSize: '1rem', fontWeight: 'bold', color: '#95a5a6' }}>Secondary Parent <span style={{ fontSize: '0.85rem', fontStyle: 'italic' }}>(Optional)</span></h3>
                                 <div className="form-group">
                                     <label htmlFor="secondaryName">Name</label>
                                     <input
@@ -335,18 +489,22 @@ const Login: React.FC = () => {
                                         disabled={loading}
                                         autoComplete="email"
                                     />
+                                    <small style={{ color: '#666', fontSize: '0.8rem' }}>Must contain @ symbol if provided</small>
                                 </div>
                                 <div className="form-group">
-                                    <label htmlFor="secondaryPhone">Phone</label>
+                                    <label htmlFor="secondaryPhone">Phone (10 digits)</label>
                                     <input
                                         type="tel"
                                         id="secondaryPhone"
                                         value={secondaryPhone}
-                                        onChange={(e) => setSecondaryPhone(e.target.value)}
-                                        placeholder="e.g. +94 77 123 4567"
+                                        onChange={(e) => handlePhoneChange(e.target.value, setSecondaryPhone)}
+                                        placeholder="e.g. 0771234567"
                                         disabled={loading}
                                         autoComplete="tel"
+                                        maxLength={10}
+                                        pattern="[0-9]{10}"
                                     />
+                                    {phoneError && <div style={{ color: '#e74c3c', fontSize: '0.85rem', marginTop: '4px' }}>{phoneError}</div>}
                                 </div>
                                 <div className="form-group">
                                     <label htmlFor="secondaryAddress">Address</label>
@@ -377,6 +535,7 @@ const Login: React.FC = () => {
                                 disabled={loading}
                                 autoComplete="email"
                             />
+                            <small style={{ color: '#666', fontSize: '0.8rem' }}>Must contain @ symbol (e.g., user@example.com)</small>
                         </div>
 
                         {/* Password */}
@@ -387,7 +546,12 @@ const Login: React.FC = () => {
                                     type={showPassword ? "text" : "password"}
                                     id="password"
                                     value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    onChange={(e) => {
+                                        setPassword(e.target.value);
+                                        if (!isLogin) {
+                                            calculatePasswordStrength(e.target.value);
+                                        }
+                                    }}
                                     placeholder={isLogin ? "Enter your password" : "Create a password (min 3 chars)"}
                                     disabled={loading}
                                     autoComplete={isLogin ? "current-password" : "new-password"}
@@ -400,6 +564,27 @@ const Login: React.FC = () => {
                                     {showPassword ? "👁️" : "👁️‍🗨️"}
                                 </button>
                             </div>
+                            {!isLogin && passwordStrength.text && (
+                                <div style={{
+                                    marginTop: '8px',
+                                    padding: '6px 12px',
+                                    borderRadius: '6px',
+                                    backgroundColor: `${passwordStrength.color}15`,
+                                    border: `1px solid ${passwordStrength.color}`,
+                                    display: 'inline-block'
+                                }}>
+                                    <span style={{ 
+                                        color: passwordStrength.color, 
+                                        fontSize: '0.85rem',
+                                        fontWeight: '600'
+                                    }}>
+                                        {passwordStrength.text}
+                                    </span>
+                                </div>
+                            )}
+                            {!isLogin && (
+                                <small style={{ color: '#666', fontSize: '0.8rem', display: 'block', marginTop: '4px' }}>At least 6 characters (use uppercase, lowercase, numbers & symbols for strong password)</small>
+                            )}
                         </div>
 
                         {/* Confirm Password (Signup only) */}
