@@ -18,6 +18,20 @@ const ParentsDashboard: React.FC = () => {
     lastUpdated: null as string | null,
   });
 
+  // parent details loaded from storage
+  const [primaryParent, setPrimaryParent] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+  });
+  const [secondaryParent, setSecondaryParent] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+  });
+
   const apiBase = (import.meta as any).env?.VITE_BACKEND_URL?.replace(/\/$/, "") || "";
   const latestUrl = apiBase ? `${apiBase}/latest` : "/api/latest";
   const historyUrl = apiBase ? `${apiBase}/history` : "/api/history";
@@ -132,6 +146,22 @@ const ParentsDashboard: React.FC = () => {
     loadSessions();
     const id = window.setInterval(loadSessions, 5000);
     return () => window.clearInterval(id);
+  }, []);
+
+  // read parent contact information once when dashboard mounts
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('user');
+      console.log('[ParentsDashboard] raw user from storage:', stored);
+      if (stored) {
+        const u: any = JSON.parse(stored);
+        console.log('[ParentsDashboard] parsed user object', u);
+        if (u.primaryParent) setPrimaryParent(u.primaryParent);
+        if (u.secondaryParent) setSecondaryParent(u.secondaryParent);
+      }
+    } catch (err) {
+      console.error('[ParentsDashboard] error parsing user info', err);
+    }
   }, []);
 
   // Fetch eye check history
@@ -362,9 +392,9 @@ const ParentsDashboard: React.FC = () => {
           }}>
             Quick Overview - {
               activeTab === "eye" ? "👁️ Eye Health & Vision" :
-              activeTab === "writing" ? "✏️ Writing Issues" :
-              activeTab === "reading" ? "📖 Reading & Speech" :
-              "👂 Auditory Response"
+                activeTab === "writing" ? "✏️ Writing Issues" :
+                  activeTab === "reading" ? "📖 Reading & Speech" :
+                    "👂 Auditory Response"
             }
           </h2>
           <div style={{
@@ -374,46 +404,46 @@ const ParentsDashboard: React.FC = () => {
           }}>
             {activeTab === "eye" && (
               <>
-                <StatCard 
-                  icon="👁️" 
-                  title="Eye Health Status" 
+                <StatCard
+                  icon="👁️"
+                  title="Eye Health Status"
                   value={
-                    latestEyeResult 
+                    latestEyeResult
                       ? (latestEyeResult.label === "normal_eye" ? "Excellent" : "Needs Care")
                       : "Pending"
                   }
                   change={latestEyeResult ? (latestEyeResult.label === "normal_eye" ? 8 : -5) : 0}
-                  color="#0284c7" 
+                  color="#0284c7"
                 />
-                <StatCard 
-                  icon="🎯" 
-                  title="Latest Detection" 
+                <StatCard
+                  icon="🎯"
+                  title="Latest Detection"
                   value={latestEyeResult ? latestEyeResult.label.replace(/_/g, " ").toUpperCase() : "No Data"}
                   change={0}
-                  color="#f59e0b" 
+                  color="#f59e0b"
                 />
-                <StatCard 
-                  icon="📊" 
-                  title="Confidence Score" 
+                <StatCard
+                  icon="📊"
+                  title="Confidence Score"
                   value={latestEyeResult ? `${(latestEyeResult.confidence * 100).toFixed(0)}%` : "N/A"}
                   change={latestEyeResult ? Math.round((latestEyeResult.confidence - 0.5) * 20) : 0}
-                  color="#10b981" 
+                  color="#10b981"
                 />
-                <StatCard 
-                  icon="⏱️" 
-                  title="Last Update" 
+                <StatCard
+                  icon="⏱️"
+                  title="Last Update"
                   value={
                     latestEyeResult && latestEyeResult.timestamp
-                      ? new Date(latestEyeResult.timestamp).toLocaleTimeString('en-US', { 
-                          hour: '2-digit', 
-                          minute: '2-digit',
-                          second: '2-digit',
-                          hour12: true
-                        })
+                      ? new Date(latestEyeResult.timestamp).toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: true
+                      })
                       : "N/A"
                   }
                   change={0}
-                  color="#ec4899" 
+                  color="#ec4899"
                 />
               </>
             )}
@@ -458,8 +488,8 @@ const ParentsDashboard: React.FC = () => {
           }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
               <h3 style={{ margin: 0, fontSize: "1.3rem", color: "#1f2937" }}>📊 Real-time Eye Detection Results</h3>
-              <span style={{ 
-                fontSize: "0.85rem", 
+              <span style={{
+                fontSize: "0.85rem",
                 fontWeight: 600,
                 padding: "4px 12px",
                 borderRadius: "20px",
@@ -482,7 +512,7 @@ const ParentsDashboard: React.FC = () => {
                   <h4 style={{ margin: "0 0 16px 0", color: "#15803d", fontSize: "1.1rem", fontWeight: 700 }}>
                     ✨ Vision Coordination Monitoring
                   </h4>
-                  
+
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px" }}>
                     {/* Condition Type */}
                     <div style={{
@@ -558,8 +588,8 @@ const ParentsDashboard: React.FC = () => {
 
                 {/* Main Detection Result */}
                 <div style={{
-                  background: latestEyeResult.label === "normal_eye" 
-                    ? "linear-gradient(135deg, #d1fae5 0%, #ecfdf5 100%)" 
+                  background: latestEyeResult.label === "normal_eye"
+                    ? "linear-gradient(135deg, #d1fae5 0%, #ecfdf5 100%)"
                     : "linear-gradient(135deg, #fee2e2 0%, #fef2f2 100%)",
                   borderLeft: `5px solid ${latestEyeResult.label === "normal_eye" ? "#10b981" : "#ef4444"}`,
                   padding: "16px",
@@ -600,7 +630,7 @@ const ParentsDashboard: React.FC = () => {
                         : "N/A"}
                     </div>
                   </div>
-                  
+
                   <div style={{ background: "#f3f4f6", padding: "12px", borderRadius: "8px" }}>
                     <div style={{ color: "#6b7280", fontSize: "0.85rem" }}>Smoothed Label</div>
                     <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "#0284c7" }}>
@@ -622,15 +652,15 @@ const ParentsDashboard: React.FC = () => {
                     <div style={{ fontSize: "0.95rem", fontWeight: 600 }}>
                       {latestEyeResult.timestamp ? (
                         <>
-                          <div>{new Date(latestEyeResult.timestamp).toLocaleDateString('en-US', { 
-                            month: 'short', 
-                            day: 'numeric', 
+                          <div>{new Date(latestEyeResult.timestamp).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
                             year: 'numeric'
                           })}</div>
                           <div style={{ fontSize: "0.85rem", color: "#6b7280", marginTop: "4px" }}>
-                            {new Date(latestEyeResult.timestamp).toLocaleTimeString('en-US', { 
-                              hour: '2-digit', 
-                              minute: '2-digit', 
+                            {new Date(latestEyeResult.timestamp).toLocaleTimeString('en-US', {
+                              hour: '2-digit',
+                              minute: '2-digit',
                               second: '2-digit',
                               hour12: true
                             })}
@@ -652,7 +682,7 @@ const ParentsDashboard: React.FC = () => {
                     <h4 style={{ margin: "0 0 12px 0", color: "#1e40af", fontSize: "1rem" }}>🔍 Gaze Analysis</h4>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px", fontSize: "0.9rem" }}>
                       <div>
-                        <span style={{ color: "#6b7280" }}>Looking at Screen:</span> 
+                        <span style={{ color: "#6b7280" }}>Looking at Screen:</span>
                         <span style={{ fontWeight: 600, marginLeft: "8px" }}>
                           {latestEyeResult.gaze_analysis.looking_at_screen ? "✓ Yes" : "✗ No"}
                         </span>
@@ -680,10 +710,10 @@ const ParentsDashboard: React.FC = () => {
                 )}
               </div>
             ) : (
-              <div style={{ 
-                background: "#fef3c7", 
+              <div style={{
+                background: "#fef3c7",
                 border: "1px solid #fcd34d",
-                padding: "16px", 
+                padding: "16px",
                 borderRadius: "8px",
                 color: "#92400e"
               }}>
@@ -725,8 +755,8 @@ const ParentsDashboard: React.FC = () => {
                     fontSize: "0.9rem",
                     fontWeight: 700,
                     color: historyPeriod === period.days ? "white" : "#6b7280",
-                    background: historyPeriod === period.days 
-                      ? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" 
+                    background: historyPeriod === period.days
+                      ? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
                       : "#f3f4f6",
                     border: historyPeriod === period.days ? "2px solid #667eea" : "2px solid #e5e7eb",
                     borderRadius: "10px",
@@ -858,7 +888,7 @@ const ParentsDashboard: React.FC = () => {
                     {historyData.daily_summary?.map((day: any, idx: number) => {
                       const normalPercent = day.total_checks > 0 ? (day.normal_count / day.total_checks) * 100 : 0;
                       const lazyPercent = day.total_checks > 0 ? (day.lazy_eye_count / day.total_checks) * 100 : 0;
-                      
+
                       return (
                         <div key={idx} style={{
                           background: "white",
@@ -867,21 +897,21 @@ const ParentsDashboard: React.FC = () => {
                           border: "2px solid #e5e7eb",
                           transition: "all 0.2s ease"
                         }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
-                          e.currentTarget.style.borderColor = "#667eea";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.boxShadow = "none";
-                          e.currentTarget.style.borderColor = "#e5e7eb";
-                        }}>
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
+                            e.currentTarget.style.borderColor = "#667eea";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.boxShadow = "none";
+                            e.currentTarget.style.borderColor = "#e5e7eb";
+                          }}>
                           {/* Day Header */}
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
                             <div>
                               <div style={{ fontSize: "1.05rem", fontWeight: 900, color: "#1f2937" }}>
-                                {new Date(day.date).toLocaleDateString('en-US', { 
-                                  weekday: 'short', 
-                                  month: 'short', 
+                                {new Date(day.date).toLocaleDateString('en-US', {
+                                  weekday: 'short',
+                                  month: 'short',
                                   day: 'numeric',
                                   year: 'numeric'
                                 })}
@@ -891,8 +921,8 @@ const ParentsDashboard: React.FC = () => {
                               </div>
                             </div>
                             <div style={{
-                              background: day.status === 'normal' 
-                                ? "linear-gradient(135deg, #10b981, #059669)" 
+                              background: day.status === 'normal'
+                                ? "linear-gradient(135deg, #10b981, #059669)"
                                 : "linear-gradient(135deg, #f59e0b, #d97706)",
                               color: "white",
                               padding: "8px 16px",
@@ -990,7 +1020,7 @@ const ParentsDashboard: React.FC = () => {
                   <h4 style={{ margin: "0 0 20px 0", fontSize: "1.1rem", color: "#1f2937", fontWeight: 900 }}>
                     📈 Check Frequency Trend
                   </h4>
-                  
+
                   <div style={{
                     display: "grid",
                     gridTemplateColumns: `repeat(${Math.min(historyData.daily_summary?.length || 1, historyPeriod)}, 1fr)`,
@@ -1001,7 +1031,7 @@ const ParentsDashboard: React.FC = () => {
                     {historyData.daily_summary?.map((day: any, idx: number) => {
                       const maxChecks = Math.max(...(historyData.daily_summary?.map((d: any) => d.total_checks) || [1]));
                       const height = Math.max(20, (day.total_checks / maxChecks) * 180);
-                      
+
                       return (
                         <div key={idx} style={{ textAlign: "center" }}>
                           <div style={{
@@ -1021,18 +1051,18 @@ const ParentsDashboard: React.FC = () => {
                             transition: "all 0.2s ease",
                             cursor: "pointer"
                           }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = "translateY(-4px)";
-                            e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = "translateY(0)";
-                            e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)";
-                          }}>
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.transform = "translateY(-4px)";
+                              e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.transform = "translateY(0)";
+                              e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)";
+                            }}>
                             {day.total_checks}
                           </div>
-                          <div style={{ 
-                            fontSize: "0.75rem", 
+                          <div style={{
+                            fontSize: "0.75rem",
                             color: "#6b7280",
                             fontWeight: 700,
                             transform: "rotate(-45deg)",
@@ -1218,7 +1248,7 @@ const ParentsDashboard: React.FC = () => {
                     fontWeight: "bold",
                     color: "#333"
                   }}>
-                    Sarah Johnson
+                    {primaryParent.name || "—"}
                   </p>
                   <div style={{
                     display: "flex",
@@ -1228,19 +1258,27 @@ const ParentsDashboard: React.FC = () => {
                   }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#666" }}>
                       <span>📧</span>
-                      <a href="mailto:sarah.johnson@email.com" style={{ color: "#667eea", textDecoration: "none" }}>
-                        sarah.johnson@email.com
-                      </a>
+                      {primaryParent.email ? (
+                        <a href={`mailto:${primaryParent.email}`} style={{ color: "#667eea", textDecoration: "none" }}>
+                          {primaryParent.email}
+                        </a>
+                      ) : (
+                        <span>—</span>
+                      )}
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#666" }}>
                       <span>📱</span>
-                      <a href="tel:+94712345678" style={{ color: "#667eea", textDecoration: "none" }}>
-                        +94 71 234 5678
-                      </a>
+                      {primaryParent.phone ? (
+                        <a href={`tel:${primaryParent.phone.replace(/\s+/g, "")}`} style={{ color: "#667eea", textDecoration: "none" }}>
+                          {primaryParent.phone}
+                        </a>
+                      ) : (
+                        <span>—</span>
+                      )}
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#666" }}>
                       <span>🏠</span>
-                      <span>123 Flower Lane, Colombo 7</span>
+                      <span>{primaryParent.address || "—"}</span>
                     </div>
                   </div>
                 </div>
@@ -1267,7 +1305,7 @@ const ParentsDashboard: React.FC = () => {
                     fontWeight: "bold",
                     color: "#333"
                   }}>
-                    Michael Johnson
+                    {secondaryParent.name || "—"}
                   </p>
                   <div style={{
                     display: "flex",
@@ -1277,19 +1315,27 @@ const ParentsDashboard: React.FC = () => {
                   }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#666" }}>
                       <span>📧</span>
-                      <a href="mailto:michael.johnson@email.com" style={{ color: "#10b981", textDecoration: "none" }}>
-                        michael.johnson@email.com
-                      </a>
+                      {secondaryParent.email ? (
+                        <a href={`mailto:${secondaryParent.email}`} style={{ color: "#10b981", textDecoration: "none" }}>
+                          {secondaryParent.email}
+                        </a>
+                      ) : (
+                        <span>—</span>
+                      )}
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#666" }}>
                       <span>📱</span>
-                      <a href="tel:+94771234567" style={{ color: "#10b981", textDecoration: "none" }}>
-                        +94 77 123 4567
-                      </a>
+                      {secondaryParent.phone ? (
+                        <a href={`tel:${secondaryParent.phone.replace(/\s+/g, "")}`} style={{ color: "#10b981", textDecoration: "none" }}>
+                          {secondaryParent.phone}
+                        </a>
+                      ) : (
+                        <span>—</span>
+                      )}
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#666" }}>
                       <span>🏠</span>
-                      <span>123 Flower Lane, Colombo 7</span>
+                      <span>{secondaryParent.address || "—"}</span>
                     </div>
                   </div>
                 </div>
@@ -1432,13 +1478,13 @@ const ParentsDashboard: React.FC = () => {
                           check: "Last Eye Check",
                           time: latestTs
                             ? latestTs.toLocaleString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                hour12: true,
-                              })
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: true,
+                            })
                             : "No recent check",
                           period: latestTs ? "✓ Current" : "Waiting",
                           highlight: true,
@@ -1542,7 +1588,7 @@ const ParentsDashboard: React.FC = () => {
                     const totalSessions = visionTherapySessions.length;
                     const therapyStarted = localStorage.getItem('visionTherapyStarted') === 'true';
                     const startDate = localStorage.getItem('visionTherapyStartDate');
-                    
+
                     // Calculate days since start
                     let daysSinceStart = 0;
                     let activeDays = 0;
@@ -1550,24 +1596,24 @@ const ParentsDashboard: React.FC = () => {
                       const start = new Date(startDate);
                       const now = new Date();
                       daysSinceStart = Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-                      
+
                       // Count unique days with sessions
                       const uniqueDays = new Set(
                         visionTherapySessions.map(s => new Date(s.startTime).toDateString())
                       );
                       activeDays = uniqueDays.size;
                     }
-                    
+
                     const completionPercent = Math.min(100, (daysSinceStart / 21) * 100);
-                    
+
                     // Get last 5 sessions
                     const recentSessions = [...visionTherapySessions]
                       .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
                       .slice(0, 5);
-                    
+
                     // Calculate current week (1-5+)
                     const currentWeek = Math.min(5, Math.floor(daysSinceStart / 7) + 1);
-                    
+
                     if (!therapyStarted || totalSessions === 0) {
                       return (
                         <div style={{ textAlign: "center", padding: "20px" }}>
@@ -1585,7 +1631,7 @@ const ParentsDashboard: React.FC = () => {
                         </div>
                       );
                     }
-                    
+
                     return (
                       <>
                         <h4 style={{
@@ -1606,9 +1652,9 @@ const ParentsDashboard: React.FC = () => {
                             <span style={{ fontSize: "0.95rem", fontWeight: "700", color: "#333" }}>
                               Stage 1 Completion (21 Days)
                             </span>
-                            <span style={{ 
-                              fontSize: "0.9rem", 
-                              fontWeight: "900", 
+                            <span style={{
+                              fontSize: "0.9rem",
+                              fontWeight: "900",
                               color: "#f59e0b",
                               backgroundColor: "#fff8e1",
                               padding: "4px 12px",
@@ -1690,7 +1736,7 @@ const ParentsDashboard: React.FC = () => {
                           const totalFails = visionTherapySessions.reduce((sum, s) => sum + (s.fails || 0), 0);
                           const totalPlayTime = visionTherapySessions.reduce((sum, s) => sum + (s.durationMs || 0), 0);
                           const avgPlayTime = totalSessions > 0 ? Math.round(totalPlayTime / totalSessions / 60000) : 0;
-                          
+
                           return (
                             <div style={{
                               display: "grid",
@@ -1783,9 +1829,9 @@ const ParentsDashboard: React.FC = () => {
                                         })}
                                       </span>
                                     </div>
-                                    <div style={{ 
-                                      display: "flex", 
-                                      gap: "12px", 
+                                    <div style={{
+                                      display: "flex",
+                                      gap: "12px",
                                       marginTop: "4px",
                                       fontSize: "0.8rem",
                                       color: "#666"
@@ -1801,9 +1847,9 @@ const ParentsDashboard: React.FC = () => {
                                       )}
                                     </div>
                                   </div>
-                                  <span style={{ 
-                                    color: "#f59e0b", 
-                                    fontWeight: "900", 
+                                  <span style={{
+                                    color: "#f59e0b",
+                                    fontWeight: "900",
                                     fontSize: "0.95rem",
                                     whiteSpace: "nowrap",
                                     marginLeft: "12px"
@@ -1848,7 +1894,7 @@ const ParentsDashboard: React.FC = () => {
                               let bgColor = "#f3f4f6";
                               let statusColor = "#9ca3af";
                               let statusBg = "#f3f4f6";
-                              
+
                               if (item.weekNum < currentWeek) {
                                 status = "Completed ✓";
                                 bgColor = "#dbeafe";
@@ -1860,7 +1906,7 @@ const ParentsDashboard: React.FC = () => {
                                 statusColor = "#f59e0b";
                                 statusBg = "#fef3c7";
                               }
-                              
+
                               return (
                                 <div key={idx} style={{
                                   backgroundColor: bgColor,

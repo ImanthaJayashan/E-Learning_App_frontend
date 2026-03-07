@@ -1,6 +1,9 @@
 import React from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 import EyeTrackingBoot from "./components/EyeTrackingBoot";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import ForgotPassword from "./pages/ForgotPassword";
 import RoleSelection from "./pages/RoleSelection";
 import Home from "./pages/Home";
 import EyeProblemDetector from "./pages/EyeProblemDetector";
@@ -15,15 +18,20 @@ import AmbloCar from "./pages/AmbloCar";
 import SnakeGame from "./pages/snake";
 import ParentsDashboard from "./pages/ParentsDashboard";
 
-const ProtectedRoute = ({ element }: { element: JSX.Element }) => {
+const ProtectedRoute = ({ element }: { element: React.ReactElement }) => {
+  const user = localStorage.getItem("user");
   const userRole = localStorage.getItem("userRole");
-  return userRole ? element : <Navigate to="/role-selection" replace />;
+
+  return user && userRole ? element : <Navigate to="/login" replace />;
 };
 
 const App: React.FC = () => (
   <>
     <EyeTrackingBoot />
     <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/role-selection" element={<RoleSelection />} />
       <Route path="/" element={<ProtectedRoute element={<Home />} />} />
       <Route path="/eye-problem-detector" element={<ProtectedRoute element={<EyeProblemDetector />} />} />

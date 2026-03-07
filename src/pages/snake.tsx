@@ -83,7 +83,7 @@ const SnakeGame: React.FC = () => {
 
   /* ---------------- Food ---------------- */
   const generateFood = (snakeBody: Point[]) => {
-    let f;
+    let f: Point;
     do {
       f = {
         x: Math.floor(Math.random() * cols),
@@ -113,7 +113,7 @@ const SnakeGame: React.FC = () => {
   /* ---------------- Timer ---------------- */
   useEffect(() => {
     if (gameOver || paused) return;
-    
+
     const timer = setInterval(() => {
       setTime(t => t + 1);
     }, 1000);
@@ -182,17 +182,17 @@ const SnakeGame: React.FC = () => {
     snake.forEach((s, index) => {
       const isHead = index === 0;
       const isTail = index === snake.length - 1;
-      
+
       // Gradient body color - darker at head, lighter at tail
       const tailAlpha = isTail ? 0.5 : 1;
       const headGradient = isHead ? "#1ea34f" : "#22c55e";
       ctx.fillStyle = isHead ? headGradient : `rgba(34, 197, 94, ${tailAlpha})`;
-      
+
       // Draw body segment as rounded rectangle
       const x = s.x * CELL_SIZE;
       const y = s.y * CELL_SIZE;
       const radius = CELL_SIZE / 4;
-      
+
       // Rounded rectangle
       ctx.beginPath();
       ctx.moveTo(x + radius, y);
@@ -206,19 +206,19 @@ const SnakeGame: React.FC = () => {
       ctx.quadraticCurveTo(x, y, x + radius, y);
       ctx.closePath();
       ctx.fill();
-      
+
       // Add border for definition
       ctx.strokeStyle = isHead ? "#15803d" : "#16a34a";
       ctx.lineWidth = 1.5;
       ctx.stroke();
-      
+
       // Draw head with eyes and mouth
       if (isHead) {
         // Eyes
         ctx.fillStyle = "white";
         const eyeOffset = CELL_SIZE / 6;
         const eyeSize = CELL_SIZE / 8;
-        
+
         // Determine eye positions based on direction
         if (direction.x > 0) { // Moving right
           ctx.fillRect(x + eyeOffset + 3, y + eyeOffset, eyeSize, eyeSize);
@@ -233,7 +233,7 @@ const SnakeGame: React.FC = () => {
           ctx.fillRect(x + eyeOffset, y + CELL_SIZE - eyeOffset - 3 - eyeSize, eyeSize, eyeSize);
           ctx.fillRect(x + CELL_SIZE - eyeOffset - eyeSize, y + CELL_SIZE - eyeOffset - 3 - eyeSize, eyeSize, eyeSize);
         }
-        
+
         // Pupils (looking in direction of movement)
         ctx.fillStyle = "#000";
         const pupilSize = eyeSize / 2.5;
@@ -251,7 +251,7 @@ const SnakeGame: React.FC = () => {
           ctx.fillRect(x + CELL_SIZE - eyeOffset - pupilSize - 1, y + CELL_SIZE - eyeOffset - 5 - pupilSize, pupilSize, pupilSize);
         }
       }
-      
+
       // Add tail scaling effect
       if (isTail) {
         ctx.fillStyle = `rgba(34, 197, 94, 0.3)`;
@@ -268,7 +268,7 @@ const SnakeGame: React.FC = () => {
       food.y * CELL_SIZE + CELL_SIZE / 2
     );
     ctx.scale(glow, glow);
-    
+
     // Alternate colors based on food position
     const colorIndex = (food.x + food.y) % 2;
     ctx.fillStyle = colorIndex === 0 ? "#FFD700" : "#fa0707";
@@ -322,7 +322,7 @@ const SnakeGame: React.FC = () => {
     setFoodsEaten(0);
     setGameOver(false);
     generateFood([{ x: 5, y: 5 }]);
-    
+
     // Reset tracking for new session
     sessionStartTime.current = Date.now();
     failsCount.current = 0;
@@ -354,7 +354,7 @@ const SnakeGame: React.FC = () => {
         existingSessions.push(completedSession);
         localStorage.setItem('visionTherapySessions', JSON.stringify(existingSessions));
         localStorage.removeItem('currentVisionTherapySession');
-        saveTherapySessionToMongoDB(completedSession);
+        saveGameSessionToMongoDB();
       }
     };
   }, [score, foodsEaten]);
@@ -368,7 +368,7 @@ const SnakeGame: React.FC = () => {
 
   return (
     <div style={{ width: "100vw", height: "100vh", background: "#f9fafb" }}>
-      <div 
+      <div
         style={{
           padding: "1rem",
           display: "flex",
@@ -614,8 +614,8 @@ const SnakeGame: React.FC = () => {
                 {score > 20
                   ? "🌟 Amazing Performance!"
                   : score > 10
-                  ? "👏 Great Effort!"
-                  : "💪 Keep Practicing!"}
+                    ? "👏 Great Effort!"
+                    : "💪 Keep Practicing!"}
               </p>
             </div>
 

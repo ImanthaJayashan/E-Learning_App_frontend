@@ -4,7 +4,8 @@ import { startEyeTracking } from "../services/eyeTracking";
 const EyeTrackingBoot = () => {
   useEffect(() => {
     const userRole = localStorage.getItem("userRole");
-    if (userRole === "child") {
+    // Support both legacy 'child' and current 'student' values
+    if (userRole === "child" || userRole === "student") {
       startEyeTracking();
     }
   }, []);

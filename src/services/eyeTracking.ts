@@ -35,6 +35,7 @@ const MIN_SMOOTH_COUNT = 3;
 
 const apiBase = (import.meta as any).env?.VITE_BACKEND_URL?.replace(/\/$/, "") || "";
 const predictUrl = apiBase ? `${apiBase}/predict` : "/api/predict";
+console.debug("EyeTracking predictUrl:", predictUrl);
 
 const notify = () => {
   listeners.forEach((listener) => listener({ ...state }));
@@ -163,6 +164,9 @@ const normalizePrediction = (data: any) => {
   return { ...data, label, confidence };
 };
 
+let consecutiveErrorCount = 0;
+const MAX_CONSECUTIVE_ERRORS = 6;
+
 const captureAndSend = async () => {
   if (!stream) return;
   const video = ensureVideo();
@@ -218,7 +222,31 @@ const captureAndSend = async () => {
       method: "POST",
       body: formData,
     });
-    if (!res.ok) throw new Error(`Backend error: ${res.status}`);
+
+    if (!res.ok) {
+      let bodyText = "";
+      try {
+        bodyText = await res.text();
+      } catch (e) {
+        bodyText = "<unreadable response body>";
+      }
+      console.error(`EyeTracking backend error ${res.status}:`, bodyText);
+      consecutiveErrorCount++;
+      setState({ error: `Backend error ${res.status}`, status: "Error" });
+
+      if (consecutiveErrorCount >= MAX_CONSECUTIVE_ERRORS) {
+        console.error("Too many consecutive backend errors, stopping capture loop but keeping camera active.");
+        // Stop the periodic capture to avoid spamming the backend, but keep the MediaStream alive
+        if (intervalId) {
+          window.clearInterval(intervalId);
+          intervalId = null;
+        }
+        setState({ status: "Paused (backend error)", error: `Backend error ${res.status}` });
+      }
+      return;
+    }
+
+    consecutiveErrorCount = 0;
     const data = await res.json();
     const withTimestamp = { ...data, timestamp: data.timestamp || new Date().toISOString() };
     setState({ latestResult: withTimestamp, status: "Tracking", error: null });
@@ -227,13 +255,24 @@ const captureAndSend = async () => {
       localStorage.setItem("latestEyeDetection", JSON.stringify(stable));
     }
   } catch (err: any) {
+    console.error("Failed to POST frame to backend:", err);
+    consecutiveErrorCount++;
     setState({ error: err?.message || "Failed to send frame", status: "Error" });
+    if (consecutiveErrorCount >= MAX_CONSECUTIVE_ERRORS) {
+      console.error("Too many consecutive network errors, stopping capture loop but keeping camera active.");
+      if (intervalId) {
+        window.clearInterval(intervalId);
+        intervalId = null;
+      }
+      setState({ status: "Paused (network error)", error: err?.message || "Failed to send frame" });
+    }
   }
 };
 
-export const startEyeTracking = async () => {
+export const startEyeTracking = async (externalStream?: MediaStream | null) => {
   const userRole = localStorage.getItem("userRole");
-  if (userRole !== "child") {
+  // Support both 'child' and 'student' values for compatibility
+  if (userRole !== "child" && userRole !== "student") {
     setState({ status: "Disabled for parents", error: null });
     return;
   }
@@ -246,10 +285,15 @@ export const startEyeTracking = async () => {
 
   setState({ status: "Starting camera...", error: null });
   try {
-    stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "user" },
-      audio: false,
-    });
+    if (externalStream) {
+      // Use provided stream (do not re-request permissions)
+      stream = externalStream;
+    } else {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user" },
+        audio: false,
+      });
+    }
 
     const video = ensureVideo();
     video.srcObject = stream;

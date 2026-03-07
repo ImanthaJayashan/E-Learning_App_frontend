@@ -5,8 +5,8 @@ import Footer from "../components/Footer";
 
 const VisionTherapy: React.FC = () => {
   const navigate = useNavigate();
-  const [butterflyPositions, setButterflyPositions] = useState<Array<{ id: number; left: number; top: number }>>([]);
-  const [showGlasses, setShowGlasses] = useState(false);
+  const [_butterflyPositions, setButterflyPositions] = useState<Array<{ id: number; left: number; top: number }>>([]);
+  const [_showGlasses, setShowGlasses] = useState(false);
 
   useEffect(() => {
     setShowGlasses(true);
@@ -287,8 +287,8 @@ const VisionTherapy: React.FC = () => {
           </button>
 
           <div className="glasses-container">
-            <img 
-              src="/put-on-your-3d-Glasses-1-18-2026.gif" 
+            <img
+              src="/put-on-your-3d-Glasses-1-18-2026.gif"
               alt="3D Glasses"
               style={{
                 width: "90vw",
@@ -297,8 +297,8 @@ const VisionTherapy: React.FC = () => {
                 filter: "drop-shadow(0 10px 20px rgba(0, 0, 0, 0.2))",
               }}
             />
-            <img 
-              src="/pngimg.com - glasses_PNG43.png" 
+            <img
+              src="/pngimg.com - glasses_PNG43.png"
               alt="Glasses"
               style={{
                 width: "400px",
@@ -319,7 +319,7 @@ const VisionTherapy: React.FC = () => {
           </button>
         </div>
 
-        
+
       </div>
       <Footer />
     </div>

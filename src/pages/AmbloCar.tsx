@@ -23,8 +23,8 @@ const AmbloCar: React.FC = () => {
   const [gameWon, setGameWon] = useState(false);
   const [musicPlaying, setMusicPlaying] = useState(false);
   const [level, setLevel] = useState(1);
-  const [showLevelComplete, setShowLevelComplete] = useState(false);
-  const [audioInitialized, setAudioInitialized] = useState(false);
+  const [_showLevelComplete, setShowLevelComplete] = useState(false);
+  const [_audioInitialized, setAudioInitialized] = useState(false);
 
   const sessionStartTime = useRef(Date.now());
   const failsCount = useRef(0);
@@ -197,7 +197,7 @@ const AmbloCar: React.FC = () => {
 
   const toggleMusic = () => {
     if (!audioRef.current) return;
-    
+
     if (musicPlaying) {
       audioRef.current.pause();
       setMusicPlaying(false);
@@ -379,7 +379,7 @@ const AmbloCar: React.FC = () => {
       try {
         const currentSession = localStorage.getItem('currentVisionTherapySession');
         if (!currentSession) return;
-        
+
         const sessionData = JSON.parse(currentSession);
         const duration = Date.now() - sessionStartTime.current;
         const completedSession = {
@@ -392,12 +392,12 @@ const AmbloCar: React.FC = () => {
           level: level,
           completed: gameWon
         };
-        
+
         // Get existing sessions
         const sessionsStr = localStorage.getItem('visionTherapySessions') || '[]';
         const sessions = JSON.parse(sessionsStr);
         sessions.push(completedSession);
-        
+
         // Save back
         localStorage.setItem('visionTherapySessions', JSON.stringify(sessions));
         localStorage.removeItem('currentVisionTherapySession');
