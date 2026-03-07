@@ -87,7 +87,7 @@ export const ALL_QUESTIONS: Question[] = [
   {
     word: "MAP",
     missingIndex: 2,
-    options: ["L", "B", "J"],
+    options: ["L", "B", "P"],
     image: img("photo-1524661135-423995f22d0b"),
   },
 
