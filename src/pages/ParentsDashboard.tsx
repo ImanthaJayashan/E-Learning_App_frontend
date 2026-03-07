@@ -31,6 +31,16 @@ const ParentsDashboard: React.FC = () => {
     phone: "",
     address: "",
   });
+  const [childProfile, setChildProfile] = useState({
+    name: "Emma",
+    age: "5 years old",
+    grade: "Pre-School",
+    level: "Advanced",
+  });
+
+  const childName = childProfile.name?.trim() || "Learner";
+  const childPossessive = childName.endsWith("s") ? `${childName}'` : `${childName}'s`;
+  const childGradeLevelText = `📍 Grade: ${childProfile.grade} | 🎯 Level: ${childProfile.level}`;
 
   const apiBase = (import.meta as any).env?.VITE_BACKEND_URL?.replace(/\/$/, "") || "";
   const latestUrl = apiBase ? `${apiBase}/latest` : "/api/latest";
@@ -158,6 +168,19 @@ const ParentsDashboard: React.FC = () => {
         console.log('[ParentsDashboard] parsed user object', u);
         if (u.primaryParent) setPrimaryParent(u.primaryParent);
         if (u.secondaryParent) setSecondaryParent(u.secondaryParent);
+
+        const resolvedAge = (() => {
+          if (typeof u.age === "number" && Number.isFinite(u.age)) return `${u.age} years old`;
+          if (typeof u.age === "string" && u.age.trim()) return u.age.trim();
+          return "5 years old";
+        })();
+
+        setChildProfile({
+          name: typeof u.displayName === "string" && u.displayName.trim() ? u.displayName.trim() : "Emma",
+          age: resolvedAge,
+          grade: typeof u.grade === "string" && u.grade.trim() ? u.grade.trim() : "Pre-School",
+          level: typeof u.level === "string" && u.level.trim() ? u.level.trim() : "Advanced",
+        });
       }
     } catch (err) {
       console.error('[ParentsDashboard] error parsing user info', err);
@@ -352,7 +375,7 @@ const ParentsDashboard: React.FC = () => {
             👋 Welcome Back!
           </h1>
           <p style={{ fontSize: "1.2rem", opacity: "0.9", marginBottom: "20px" }}>
-            Emma's Learning Journey is Amazing! Keep up the fantastic work.
+            {childPossessive} Learning Journey is Amazing! Keep up the fantastic work.
           </p>
           <div style={{
             display: "flex",
@@ -1154,15 +1177,15 @@ const ParentsDashboard: React.FC = () => {
                 }}>
                   👧
                 </div>
-                <h2 style={{ fontSize: "1.8rem", margin: "0 0 8px 0", fontFamily: "'Fredoka One', sans-serif" }}>Emma</h2>
-                <p style={{ fontSize: "1rem", opacity: "0.9", margin: "0 0 16px 0" }}>Age 5 years old</p>
+                <h2 style={{ fontSize: "1.8rem", margin: "0 0 8px 0", fontFamily: "'Fredoka One', sans-serif" }}>{childName}</h2>
+                <p style={{ fontSize: "1rem", opacity: "0.9", margin: "0 0 16px 0" }}>Age {childProfile.age}</p>
                 <div style={{
                   backgroundColor: "rgba(255,255,255,0.2)",
                   padding: "12px",
                   borderRadius: "12px",
                   fontSize: "0.9rem"
                 }}>
-                  📍 Grade: Pre-School | 🎯 Level: Advanced
+                  {childGradeLevelText}
                 </div>
               </div>
 
@@ -2186,7 +2209,7 @@ const ParentsDashboard: React.FC = () => {
                 📈 This Week's Trends
               </h3>
               <ul style={{ color: "#666", paddingLeft: "20px", fontSize: "0.95rem" }}>
-                <li style={{ marginBottom: "12px" }}>👆 Emma's learning time increased by 25%</li>
+                <li style={{ marginBottom: "12px" }}>👆 {childPossessive} learning time increased by 25%</li>
                 <li style={{ marginBottom: "12px" }}>🎯 Eye health metrics improved significantly</li>
                 <li style={{ marginBottom: "12px" }}>⭐ Consistency in daily activities: 5/7 days</li>
                 <li>🏃 Activity diversity: 8 different learning activities</li>
@@ -2208,7 +2231,7 @@ const ParentsDashboard: React.FC = () => {
                 🎯 Next Steps
               </h3>
               <ul style={{ color: "#666", paddingLeft: "20px", fontSize: "0.95rem" }}>
-                <li style={{ marginBottom: "12px" }}>🆙 Advance to Level 2 challenges - Emma's ready!</li>
+                <li style={{ marginBottom: "12px" }}>🆙 Advance to Level 2 challenges - {childPossessive} ready!</li>
                 <li style={{ marginBottom: "12px" }}>🎨 Introduce creative writing exercises</li>
                 <li style={{ marginBottom: "12px" }}>👥 Join group learning sessions</li>
                 <li>🏆 Work towards "Perfect Week" badge</li>
@@ -2251,15 +2274,15 @@ const ParentsDashboard: React.FC = () => {
                 }}>
                   👧
                 </div>
-                <h2 style={{ fontSize: "1.8rem", margin: "0 0 8px 0", fontFamily: "'Fredoka One', sans-serif" }}>Emma</h2>
-                <p style={{ fontSize: "1rem", opacity: "0.9", margin: "0 0 16px 0" }}>Age 5 years old</p>
+                <h2 style={{ fontSize: "1.8rem", margin: "0 0 8px 0", fontFamily: "'Fredoka One', sans-serif" }}>{childName}</h2>
+                <p style={{ fontSize: "1rem", opacity: "0.9", margin: "0 0 16px 0" }}>Age {childProfile.age}</p>
                 <div style={{
                   backgroundColor: "rgba(255,255,255,0.2)",
                   padding: "12px",
                   borderRadius: "12px",
                   fontSize: "0.9rem"
                 }}>
-                  📍 Grade: Pre-School | 🎯 Level: Advanced
+                  {childGradeLevelText}
                 </div>
               </div>
             </div>
@@ -2337,15 +2360,15 @@ const ParentsDashboard: React.FC = () => {
                 }}>
                   👧
                 </div>
-                <h2 style={{ fontSize: "1.8rem", margin: "0 0 8px 0", fontFamily: "'Fredoka One', sans-serif" }}>Emma</h2>
-                <p style={{ fontSize: "1rem", opacity: "0.9", margin: "0 0 16px 0" }}>Age 5 years old</p>
+                <h2 style={{ fontSize: "1.8rem", margin: "0 0 8px 0", fontFamily: "'Fredoka One', sans-serif" }}>{childName}</h2>
+                <p style={{ fontSize: "1rem", opacity: "0.9", margin: "0 0 16px 0" }}>Age {childProfile.age}</p>
                 <div style={{
                   backgroundColor: "rgba(255,255,255,0.2)",
                   padding: "12px",
                   borderRadius: "12px",
                   fontSize: "0.9rem"
                 }}>
-                  📍 Grade: Pre-School | 🎯 Level: Advanced
+                  {childGradeLevelText}
                 </div>
               </div>
             </div>
@@ -2423,15 +2446,15 @@ const ParentsDashboard: React.FC = () => {
                 }}>
                   👧
                 </div>
-                <h2 style={{ fontSize: "1.8rem", margin: "0 0 8px 0", fontFamily: "'Fredoka One', sans-serif" }}>Emma</h2>
-                <p style={{ fontSize: "1rem", opacity: "0.9", margin: "0 0 16px 0" }}>Age 5 years old</p>
+                <h2 style={{ fontSize: "1.8rem", margin: "0 0 8px 0", fontFamily: "'Fredoka One', sans-serif" }}>{childName}</h2>
+                <p style={{ fontSize: "1rem", opacity: "0.9", margin: "0 0 16px 0" }}>Age {childProfile.age}</p>
                 <div style={{
                   backgroundColor: "rgba(255,255,255,0.2)",
                   padding: "12px",
                   borderRadius: "12px",
                   fontSize: "0.9rem"
                 }}>
-                  📍 Grade: Pre-School | 🎯 Level: Advanced
+                  {childGradeLevelText}
                 </div>
               </div>
             </div>

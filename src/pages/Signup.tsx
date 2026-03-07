@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth } from "../firebase.ts";
 import "./Login.css";
 
@@ -57,6 +57,10 @@ const Signup: React.FC = () => {
             // Create user with Firebase Authentication
             await createUserWithEmailAndPassword(auth, email.trim(), password);
 
+            if (auth.currentUser) {
+                await updateProfile(auth.currentUser, { displayName: displayName.trim() });
+            }
+
             alert("Account created successfully!");
 
             // Store user info in localStorage including parent contacts
@@ -64,6 +68,9 @@ const Signup: React.FC = () => {
                 displayName: displayName.trim(),
                 email: email.trim(),
                 userType: "student",
+                age: "5 years old",
+                grade: "Pre-School",
+                level: "Advanced",
                 primaryParent: {
                     name: primaryName.trim(),
                     email: primaryEmail.trim(),

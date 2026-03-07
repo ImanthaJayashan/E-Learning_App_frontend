@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth } from "../firebase.ts";
 import "./Login.css";
 
@@ -46,21 +46,47 @@ const Login: React.FC = () => {
 
             alert("Login successful!");
 
-            // Store user info. If there is already a stored object (from signup) keep its extra fields.
+            // Store user info and avoid leaking a previous account profile into this login.
             try {
                 const saved = localStorage.getItem("user");
                 console.log("[Login] merging with saved user", saved);
+                const normalizedEmail = email.trim().toLowerCase();
+                const fallbackDisplayName = auth.currentUser?.displayName?.trim() || normalizedEmail.split("@")[0];
                 if (saved) {
                     const obj: any = JSON.parse(saved);
-                    obj.email = email.trim();
-                    localStorage.setItem("user", JSON.stringify(obj));
+                    const savedEmail = typeof obj.email === "string" ? obj.email.trim().toLowerCase() : "";
+                    if (savedEmail === normalizedEmail) {
+                        obj.email = email.trim();
+                        if (!obj.displayName && fallbackDisplayName) obj.displayName = fallbackDisplayName;
+                        localStorage.setItem("user", JSON.stringify(obj));
+                    } else {
+                        localStorage.setItem("user", JSON.stringify({
+                            email: email.trim(),
+                            displayName: fallbackDisplayName,
+                            age: "5 years old",
+                            grade: "Pre-School",
+                            level: "Advanced",
+                        }));
+                    }
                 } else {
-                    localStorage.setItem("user", JSON.stringify({ email: email.trim() }));
+                    localStorage.setItem("user", JSON.stringify({
+                        email: email.trim(),
+                        displayName: fallbackDisplayName,
+                        age: "5 years old",
+                        grade: "Pre-School",
+                        level: "Advanced",
+                    }));
                 }
             } catch (e) {
                 console.error("[Login] error merging user info", e);
                 // fallback to minimal info
-                localStorage.setItem("user", JSON.stringify({ email: email.trim() }));
+                localStorage.setItem("user", JSON.stringify({
+                    email: email.trim(),
+                    displayName: auth.currentUser?.displayName?.trim() || email.trim().split("@")[0],
+                    age: "5 years old",
+                    grade: "Pre-School",
+                    level: "Advanced",
+                }));
             }
 
             // Mark that we should auto-apply saved role on the role-selection page
@@ -116,6 +142,10 @@ const Login: React.FC = () => {
             // Create user with Firebase
             await createUserWithEmailAndPassword(auth, email.trim(), password);
 
+            if (auth.currentUser) {
+                await updateProfile(auth.currentUser, { displayName: displayName.trim() });
+            }
+
             alert("Account created successfully!");
 
             // Store user info along with parent contact details
@@ -123,6 +153,9 @@ const Login: React.FC = () => {
                 displayName: displayName.trim(),
                 email: email.trim(),
                 userType: "student",
+                age: "5 years old",
+                grade: "Pre-School",
+                level: "Advanced",
                 primaryParent: {
                     name: primaryName.trim(),
                     email: primaryEmail.trim(),
