@@ -8,6 +8,7 @@ interface AnimalCardProps {
   isCorrect?: boolean;
   isWrong?: boolean;
   disabled?: boolean;
+  played?: boolean; // has the sound been heard already
 }
 
 export const AnimalCard = ({
@@ -17,6 +18,7 @@ export const AnimalCard = ({
   isCorrect,
   isWrong,
   disabled,
+  played = false,
 }: AnimalCardProps) => {
   return (
     <motion.button
@@ -60,6 +62,16 @@ export const AnimalCard = ({
           className="absolute -top-3 -right-3 text-5xl"
         >
           ❌
+        </motion.div>
+      )}
+
+      {played && (
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          className="absolute -top-3 -left-3 text-4xl text-green-500"
+        >
+          ✅
         </motion.div>
       )}
     </motion.button>

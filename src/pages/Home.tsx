@@ -60,11 +60,11 @@ const Home: React.FC = () => {
           <button
             type="button"
             aria-label="Hearing Problems"
-            onClick={() => handleClick("Hearing Problems")}
+            onClick={() => navigate("/learn")}
             style={buttonBase}
           >
             <strong>Hearing Problems</strong>
-            <div style={{ marginTop: 6, fontSize: 13, color: "#555" }}>Screen for hearing-related issues.</div>
+            <div style={{ marginTop: 6, fontSize: 13, color: "#555" }}>Learn animal sounds and play the game.</div>
           </button>
 
           <button

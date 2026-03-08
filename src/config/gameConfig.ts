@@ -111,7 +111,7 @@ export const getModeDescription = (): string => {
     case 'PREDICTION':
       return '🔮 Prediction Mode - Real-time ML predictions';
     case 'BOTH':
-      return '🚀 Full Mode - Storage + Predictions';
+      return '';
     default:
       return 'Unknown mode';
   }

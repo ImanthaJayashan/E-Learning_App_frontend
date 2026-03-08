@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { AnimalCard } from "@/components/AnimalCard";
 import { Confetti } from "@/components/Confetti";
@@ -24,6 +25,12 @@ import catImage from "@/assets/cat.png";
 import cowImage from "@/assets/cow.png";
 import lionImage from "@/assets/lion.png";
 
+// real sound files
+import dogSound from "@/assets/sounds/dog.wav";
+import catSound from "@/assets/sounds/cat.wav";
+import cowSound from "@/assets/sounds/cow.wav";
+import lionSound from "@/assets/sounds/lion.wav";
+
 interface Animal {
   name: string;
   image: string;
@@ -31,13 +38,14 @@ interface Animal {
 }
 
 const animals: Animal[] = [
-  { name: "dog", image: dogImage, sound: "Woof! Woof!" },
-  { name: "cat", image: catImage, sound: "Meow! Meow!" },
-  { name: "cow", image: cowImage, sound: "Moo! Moo!" },
-  { name: "lion", image: lionImage, sound: "Roar! Roar!" },
+  { name: "dog", image: dogImage, sound: dogSound },
+  { name: "cat", image: catImage, sound: catSound },
+  { name: "cow", image: cowImage, sound: cowSound },
+  { name: "lion", image: lionImage, sound: lionSound },
 ];
 
 const Index = () => {
+  const navigate = useNavigate();
   const [currentAnimal, setCurrentAnimal] = useState<Animal | null>(null);
   const [selectedAnimal, setSelectedAnimal] = useState<string | null>(null);
   const [score, setScore] = useState(0);
@@ -63,12 +71,12 @@ const Index = () => {
     if (currentAnimal) {
       // Record the time when sound is played
       soundPlayTimeRef.current = Date.now();
-      
-      // Using speech synthesis for animal sounds
-      const utterance = new SpeechSynthesisUtterance(currentAnimal.sound);
-      utterance.rate = 0.8;
-      utterance.pitch = 1.2;
-      speechSynthesis.speak(utterance);
+
+      // play the imported audio file
+      const audio = new Audio(currentAnimal.sound);
+      audio.play().catch((e) => {
+        console.error("Failed to play sound", e);
+      });
       
       if (!gameStarted) {
         setGameStarted(true);
@@ -78,6 +86,8 @@ const Index = () => {
   };
 
   const handleAnimalClick = async (animalName: string) => {
+    // ignore clicks while prediction modal is visible
+    if (showPrediction) return;
     if (selectedAnimal || !gameStarted || !soundPlayTimeRef.current) return;
 
     // Calculate response time
@@ -216,6 +226,10 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-accent/10 to-secondary/20 p-4 sm:p-8">
       <Confetti show={showConfetti} />
       
+      <div className="w-full text-right mb-4">
+        <Button variant="outline" size="sm" onClick={() => navigate("/learn")}>Learn sounds first</Button>
+      </div>
+
       <div className="max-w-6xl mx-auto">
         {/* Mode Indicator */}
         <motion.div
@@ -283,7 +297,7 @@ const Index = () => {
 
           {/* Analytics info display */}
           <div className="mt-4 text-sm text-foreground/50 space-y-1">
-            <p>Session: {gameService.getSessionId().slice(-8)} | Attempts: {gameService.getAttemptCount()}</p>
+            <p>Attempts: {gameService.getAttemptCount()}</p>
             {shouldShowPredictionUI() && (
               <p>
                 {canPredict ? (
@@ -343,7 +357,16 @@ const Index = () => {
         {/* Prediction Results Modal */}
         <AnimatePresence>
           {showPrediction && predictionResult && (
-            <Dialog open={showPrediction} onOpenChange={setShowPrediction}>
+            <Dialog
+              open={showPrediction}
+              onOpenChange={(open) => {
+                setShowPrediction(open);
+                if (!open) {
+                  // when the prediction modal is closed, start a fresh session
+                  resetGame();
+                }
+              }}
+            >
               <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="text-2xl mb-4">
