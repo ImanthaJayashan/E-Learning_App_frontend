@@ -1,0 +1,30 @@
+{
+  "letters": [
+    { "letter": "A", "title": "Letter A", "youtubeId": "fCT-X9q00uE" },
+    { "letter": "B", "title": "Letter B", "youtubeId": "j5PEvtWxfJ8" },
+    { "letter": "C", "title": "Letter C", "youtubeId": "tBZbi-b-8Is" },
+    { "letter": "D", "title": "Letter D", "youtubeId": "-ePc9m3Tsm0" },
+    { "letter": "E", "title": "Letter E", "youtubeId": "S16POlw4eiE" },
+    { "letter": "F", "title": "Letter F", "youtubeId": "JDObTvw2kBU" },
+    { "letter": "G", "title": "Letter G", "youtubeId": "Pa72y-9tLFE" },
+    { "letter": "H", "title": "Letter H", "youtubeId": "DrCJCa3ghhs" },
+    { "letter": "I", "title": "Letter I", "youtubeId": "CJQ7PRYCluc" },
+    { "letter": "J", "title": "Letter J", "youtubeId": "3ikxS1DFECI" },
+    { "letter": "K", "title": "Letter K", "youtubeId": "1JmSLMQOev0" },
+    { "letter": "L", "title": "Letter L", "youtubeId": "DWSEHppTb6U" },
+    { "letter": "M", "title": "Letter M", "youtubeId": "X4CtpOPddl4" },
+    { "letter": "N", "title": "Letter N", "youtubeId": "j8UOxZc3T6A" },
+    { "letter": "O", "title": "Letter O", "youtubeId": "sqPVSuY5RMg" },
+    { "letter": "P", "title": "Letter P", "youtubeId": "tNn9m8usRik" },
+    { "letter": "Q", "title": "Letter Q", "youtubeId": "uzdmfh76tPk" },
+    { "letter": "R", "title": "Letter R", "youtubeId": "3zupuZUaJBk" },
+    { "letter": "S", "title": "Letter S", "youtubeId": "NFqBgZ1umzY" },
+    { "letter": "T", "title": "Letter T", "youtubeId": "JWsjY2-bGCk" },
+    { "letter": "U", "title": "Letter U", "youtubeId": "SVI9cjexbpc" },
+    { "letter": "V", "title": "Letter V", "youtubeId": "cfIcxFom5dc" },
+    { "letter": "W", "title": "Letter W", "youtubeId": "k1XbhN3j6WI" },
+    { "letter": "X", "title": "Letter X", "youtubeId": "VIEHgtqOGs4" },
+    { "letter": "Y", "title": "Letter Y", "youtubeId": "SdSh98MA0HY" },
+    { "letter": "Z", "title": "Letter Z", "youtubeId": "SlTJyCbloik" }
+  ]
+}

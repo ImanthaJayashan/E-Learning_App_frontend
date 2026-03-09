@@ -13,9 +13,16 @@ const Navbar: React.FC = () => {
 
   return (
     <nav className="navbar">
-      <div className="navbar-inner" style={{ backgroundColor: "#E4E5E5", color: "white" }}>
+      <div
+        className="navbar-inner"
+        style={{ backgroundColor: "#E4E5E5", color: "white" }}
+      >
         <Link className="nav-brand" to="/">
-          <img className="nav-logo" src="/Gemini_Generated_Image_5rph3y5rph3y5rph.png" alt="Little Learners Hub logo" />
+          <img
+            className="nav-logo"
+            src="/Gemini_Generated_Image_5rph3y5rph3y5rph.png"
+            alt="Little Learners Hub logo"
+          />
           <div className="brand-text">
             <span className="brand-main">Little Learners</span>
             <span className="brand-accent">Hub</span>
@@ -24,30 +31,62 @@ const Navbar: React.FC = () => {
 
         <div className="nav-right">
           <ul className="nav-links">
-            <li><Link className="nav-link" to="/">Home</Link></li>
-            <li><Link className="nav-link" to="#">Lessons</Link></li>
-            <li><Link className="nav-link" to="#">Resource</Link></li>
-            <li><Link className="nav-link" to="#">AboutUs</Link></li>
+            <li>
+              <Link className="nav-link" to="/">
+                Home
+              </Link>
+            </li>
+            <li>
+              <Link className="nav-link" to="#">
+                Lessons
+              </Link>
+            </li>
+            <li>
+              <Link className="nav-link" to="#">
+                Resource
+              </Link>
+            </li>
+            <li>
+              <Link className="nav-link" to="#">
+                AboutUs
+              </Link>
+            </li>
+            <li>
+              <Link className="nav-link" to="/write-sense/landing-page">
+                Write sense
+              </Link>
+            </li>
           </ul>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginRight: "10px" }}>
-            <span style={{ color: "#333", fontWeight: "600", fontSize: "0.9rem" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              marginRight: "10px",
+            }}
+          >
+            <span
+              style={{ color: "#333", fontWeight: "600", fontSize: "0.9rem" }}
+            >
               {userRole === "child" ? "👧 Child Mode" : "👨‍👩‍👧‍👦 Parent Mode"}
             </span>
           </div>
 
-          <button type="button" className="nav-cta">Sign Up</button>
-          <button 
-            type="button" 
-            className="nav-cta" 
+          <button type="button" className="nav-cta">
+            Sign Up
+          </button>
+          <button
+            type="button"
+            className="nav-cta"
             style={{ marginLeft: "10px", backgroundColor: "#667eea" }}
             onClick={() => navigate("/parents-dashboard")}
           >
             Parents Dashboard
           </button>
-          <button 
-            type="button" 
-            className="nav-cta" 
+          <button
+            type="button"
+            className="nav-cta"
             style={{ marginLeft: "10px", backgroundColor: "#ef4444" }}
             onClick={handleLogout}
           >
