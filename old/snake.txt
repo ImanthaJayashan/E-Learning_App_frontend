@@ -83,7 +83,7 @@ const SnakeGame: React.FC = () => {
 
   /* ---------------- Food ---------------- */
   const generateFood = (snakeBody: Point[]) => {
-    let f: { x: number; y: number };
+    let f;
     do {
       f = {
         x: Math.floor(Math.random() * cols),
@@ -354,7 +354,7 @@ const SnakeGame: React.FC = () => {
         existingSessions.push(completedSession);
         localStorage.setItem('visionTherapySessions', JSON.stringify(existingSessions));
         localStorage.removeItem('currentVisionTherapySession');
-        saveGameSessionToMongoDB();
+        saveTherapySessionToMongoDB(completedSession);
       }
     };
   }, [score, foodsEaten]);
