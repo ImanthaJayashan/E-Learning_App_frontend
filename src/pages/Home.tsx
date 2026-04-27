@@ -10,6 +10,12 @@ const Home: React.FC = () => {
 
   const games = [
     {
+      title: "VOICE LEARN",
+      image: "foximgnb.png",
+      color: "#009688",
+      route: "/voice-learn"
+    },
+    {
       title: "NUMBERS",
       image: "numbers.jpg",
       color: "#8B4513",

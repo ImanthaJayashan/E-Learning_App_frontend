@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import type { LetterResult } from "../components/voicelearn/ActivityCard";
 
 const ParentsDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<"eye" | "writing" | "reading" | "auditory" | "insights" | "detailed">("eye");
+  const [activeTab, setActiveTab] = useState<"eye" | "writing" | "reading" | "auditory" | "voice" | "insights" | "detailed">("eye");
   const [latestEyeResult, setLatestEyeResult] = useState<any>(null);
   const [eyeStatus, setEyeStatus] = useState("Waiting for detection...");
   const [historyPeriod, setHistoryPeriod] = useState<7 | 14 | 21>(7);
   const [historyData, setHistoryData] = useState<any>(null);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [visionTherapySessions, setVisionTherapySessions] = useState<any[]>([]);
+  const [voiceLearnResults, setVoiceLearnResults] = useState<LetterResult[]>([]);
   const [learningStats, setLearningStats] = useState({
     circle: { ms: 0, visits: 0, lastVisit: null as string | null },
     square: { ms: 0, visits: 0, lastVisit: null as string | null },
@@ -131,6 +133,21 @@ const ParentsDashboard: React.FC = () => {
 
     loadSessions();
     const id = window.setInterval(loadSessions, 5000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  // Load voice learn results from localStorage
+  useEffect(() => {
+    const loadVoiceResults = () => {
+      try {
+        const stored = localStorage.getItem('voiceLearnResults');
+        if (stored) setVoiceLearnResults(JSON.parse(stored));
+      } catch (e) {
+        console.error('Error loading voice learn results:', e);
+      }
+    };
+    loadVoiceResults();
+    const id = window.setInterval(loadVoiceResults, 3000);
     return () => window.clearInterval(id);
   }, []);
 
@@ -444,6 +461,21 @@ const ParentsDashboard: React.FC = () => {
                 <StatCard icon="⚡" title="Response Time" value="Fast" change={6} color="#f59e0b" />
               </>
             )}
+
+            {activeTab === "voice" && (() => {
+              const correct = voiceLearnResults.filter(r => r.status === 'correct').length;
+              const missed = voiceLearnResults.filter(r => r.status === 'missed' || r.status === 'skipped').length;
+              const attempted = voiceLearnResults.filter(r => r.status !== 'pending').length;
+              const score = attempted > 0 ? Math.round((correct / attempted) * 100) : 0;
+              return (
+                <>
+                  <StatCard icon="✅" title="Letters Correct" value={String(correct)} change={correct} color="#10b981" />
+                  <StatCard icon="❌" title="Letters Missed" value={String(missed)} change={-missed} color="#ef4444" />
+                  <StatCard icon="📊" title="Accuracy Score" value={`${score}%`} change={score - 50} color="#0284c7" />
+                  <StatCard icon="🔠" title="Attempted" value={`${attempted}/26`} change={attempted} color="#f59e0b" />
+                </>
+              );
+            })()}
           </div>
         </div>
 
@@ -1065,7 +1097,8 @@ const ParentsDashboard: React.FC = () => {
             { id: "eye", label: "👁️ Eye Health & Vision" },
             { id: "writing", label: "✏️ Writing Issues" },
             { id: "reading", label: "📖 Reading & Speech" },
-            { id: "auditory", label: "👂 Auditory Response" }
+            { id: "auditory", label: "👂 Auditory Response" },
+            { id: "voice", label: "🎤 Voice Learning" }
           ].map(tab => (
             <button
               key={tab.id}
@@ -2072,6 +2105,194 @@ const ParentsDashboard: React.FC = () => {
             </div>
           </div>
         )}
+
+        {activeTab === "voice" && (() => {
+          const correct = voiceLearnResults.filter(r => r.status === 'correct');
+          const missed = voiceLearnResults.filter(r => r.status === 'missed');
+          const skipped = voiceLearnResults.filter(r => r.status === 'skipped');
+          const pending = voiceLearnResults.filter(r => r.status === 'pending');
+          const attempted = voiceLearnResults.filter(r => r.status !== 'pending');
+          const score = attempted.length > 0 ? Math.round((correct.length / attempted.length) * 100) : 0;
+          const needsPractice = [...missed, ...skipped];
+
+          return (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "30px" }}>
+              {/* Left: Score ring + summary */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                {/* Score Card */}
+                <div style={{
+                  background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+                  color: "white",
+                  padding: "28px",
+                  borderRadius: "16px",
+                  textAlign: "center",
+                  boxShadow: "0 8px 24px rgba(245,158,11,0.3)"
+                }}>
+                  <div style={{ fontSize: "0.9rem", fontWeight: 700, opacity: 0.9, marginBottom: "10px" }}>ABC Score</div>
+                  <div style={{ position: "relative", width: "100px", height: "100px", margin: "0 auto 14px" }}>
+                    <svg viewBox="0 0 100 100" style={{ width: "100%", height: "100%", transform: "rotate(-90deg)" }}>
+                      <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="10" />
+                      <circle
+                        cx="50" cy="50" r="42"
+                        fill="none" stroke="white" strokeWidth="10"
+                        strokeLinecap="round"
+                        strokeDasharray={`${2 * Math.PI * 42}`}
+                        strokeDashoffset={`${2 * Math.PI * 42 * (1 - score / 100)}`}
+                        style={{ transition: "stroke-dashoffset 1s ease" }}
+                      />
+                    </svg>
+                    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.5rem", fontWeight: 900 }}>
+                      {score}%
+                    </div>
+                  </div>
+                  <div style={{ fontSize: "1.1rem", fontWeight: 900 }}>{correct.length} / {attempted.length} correct</div>
+                  <div style={{ fontSize: "0.85rem", opacity: 0.85, marginTop: 4 }}>{pending.length} letters remaining</div>
+                </div>
+
+                {/* Stat breakdown */}
+                <div style={{ background: "white", borderRadius: "14px", padding: "20px", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                  <h4 style={{ margin: "0 0 14px 0", fontWeight: 900, color: "#1f2937" }}>Breakdown</h4>
+                  {[
+                    { label: "✅ Correct", count: correct.length, color: "#10b981", bg: "#d1fae5" },
+                    { label: "❌ Missed", count: missed.length, color: "#ef4444", bg: "#fee2e2" },
+                    { label: "⏭️ Skipped", count: skipped.length, color: "#f59e0b", bg: "#fef3c7" },
+                    { label: "⏳ Pending", count: pending.length, color: "#9ca3af", bg: "#f3f4f6" },
+                  ].map(item => (
+                    <div key={item.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", background: item.bg, borderRadius: "10px", marginBottom: "8px" }}>
+                      <span style={{ fontWeight: 700, color: item.color, fontSize: "0.9rem" }}>{item.label}</span>
+                      <span style={{ fontWeight: 900, color: item.color, fontSize: "1.1rem" }}>{item.count}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Go to activity */}
+                <button
+                  onClick={() => window.location.href = "/voice-learn"}
+                  style={{
+                    background: "linear-gradient(135deg, #10b981, #059669)",
+                    color: "white", border: "none", padding: "14px",
+                    borderRadius: "12px", fontWeight: 900, fontSize: "1rem",
+                    cursor: "pointer", boxShadow: "0 4px 12px rgba(16,185,129,0.3)",
+                    transition: "all 0.2s ease"
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; }}
+                >
+                  🎤 Open Voice Learning
+                </button>
+              </div>
+
+              {/* Right: Detailed panels */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+
+                {/* Needs Practice */}
+                {needsPractice.length > 0 && (
+                  <div style={{ background: "linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)", border: "2px solid #ef4444", borderRadius: "16px", padding: "24px" }}>
+                    <h3 style={{ margin: "0 0 6px 0", fontSize: "1.2rem", fontWeight: 900, color: "#991b1b", display: "flex", alignItems: "center", gap: "8px" }}>
+                      ⚠️ Needs Practice ({needsPractice.length} letters)
+                    </h3>
+                    <p style={{ margin: "0 0 16px 0", fontSize: "0.85rem", color: "#b91c1c" }}>
+                      These letters were missed or skipped during practice sessions.
+                    </p>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "12px" }}>
+                      {needsPractice.map(r => (
+                        <div key={r.char} style={{
+                          background: "white", borderRadius: "12px", padding: "14px",
+                          border: "2px solid #fca5a5", display: "flex", alignItems: "center", gap: "12px"
+                        }}>
+                          <div style={{
+                            width: "44px", height: "44px", background: "#fee2e2",
+                            borderRadius: "10px", display: "flex", alignItems: "center",
+                            justifyContent: "center", fontSize: "1.4rem", fontWeight: 900, color: "#ef4444", flexShrink: 0
+                          }}>
+                            {r.char}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 700, color: "#1f2937", fontSize: "0.9rem" }}>{r.emoji} {r.word}</div>
+                            <div style={{ fontSize: "0.75rem", color: "#9ca3af", marginTop: "2px" }}>
+                              {r.attempts} attempt{r.attempts !== 1 ? 's' : ''} • {r.status === 'missed' ? '❌ Missed' : '⏭️ Skipped'}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {needsPractice.length > 0 && (
+                      <div style={{ marginTop: "14px", background: "white", border: "1px solid #fca5a5", borderRadius: "10px", padding: "12px" }}>
+                        <span style={{ fontWeight: 700, color: "#b91c1c", fontSize: "0.85rem" }}>
+                          💡 Tip: </span>
+                        <span style={{ color: "#7f1d1d", fontSize: "0.85rem" }}>
+                          Try pointing to objects at home — e.g. "{needsPractice[0].char} for {needsPractice[0].word} {needsPractice[0].emoji}" to reinforce these sounds through real-world examples.
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Mastered */}
+                {correct.length > 0 && (
+                  <div style={{ background: "linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%)", border: "2px solid #10b981", borderRadius: "16px", padding: "24px" }}>
+                    <h3 style={{ margin: "0 0 6px 0", fontSize: "1.2rem", fontWeight: 900, color: "#065f46", display: "flex", alignItems: "center", gap: "8px" }}>
+                      ⭐ Mastered ({correct.length} letters)
+                    </h3>
+                    <p style={{ margin: "0 0 16px 0", fontSize: "0.85rem", color: "#047857" }}>
+                      Great job! Your child got these right.
+                    </p>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "10px" }}>
+                      {correct.map(r => (
+                        <div key={r.char} style={{
+                          background: "white", borderRadius: "12px", padding: "12px",
+                          border: "2px solid #6ee7b7", display: "flex", alignItems: "center", gap: "10px"
+                        }}>
+                          <div style={{
+                            width: "40px", height: "40px", background: "#10b981",
+                            borderRadius: "10px", display: "flex", alignItems: "center",
+                            justifyContent: "center", fontSize: "1.1rem", fontWeight: 900, color: "white", flexShrink: 0
+                          }}>
+                            {r.char}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 700, color: "#1f2937", fontSize: "0.85rem" }}>{r.emoji} {r.word}</div>
+                            <div style={{ fontSize: "0.75rem", color: "#6b7280" }}>{r.attempts} attempt{r.attempts !== 1 ? 's' : ''} ✓</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Not yet started */}
+                {pending.length > 0 && (
+                  <div style={{ background: "white", border: "2px solid #e5e7eb", borderRadius: "16px", padding: "24px" }}>
+                    <h3 style={{ margin: "0 0 12px 0", fontSize: "1.1rem", fontWeight: 900, color: "#6b7280" }}>
+                      ⏳ Not Yet Practiced ({pending.length} letters)
+                    </h3>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                      {pending.map(r => (
+                        <span key={r.char} style={{
+                          background: "#f3f4f6", color: "#6b7280", fontWeight: 700,
+                          padding: "6px 14px", borderRadius: "10px", fontSize: "0.9rem"
+                        }}>
+                          {r.char} {r.emoji}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Empty state */}
+                {voiceLearnResults.length === 0 && (
+                  <div style={{ background: "white", border: "2px solid #e5e7eb", borderRadius: "16px", padding: "48px", textAlign: "center" }}>
+                    <div style={{ fontSize: "4rem", marginBottom: "16px" }}>🦊</div>
+                    <p style={{ color: "#6b7280", fontWeight: 700, fontSize: "1.1rem", margin: 0 }}>No data yet!</p>
+                    <p style={{ color: "#9ca3af", fontSize: "0.9rem", margin: "8px 0 0 0" }}>
+                      Have your child start the Voice Learning activity to track ABC progress here.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
         {activeTab === "detailed" && (
           <div style={{
