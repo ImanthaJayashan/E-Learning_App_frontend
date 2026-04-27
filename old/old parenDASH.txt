@@ -20,9 +20,9 @@ const ParentsDashboard: React.FC = () => {
     lastUpdated: null as string | null,
   });
 
-  // Backend calls disabled — eye data read from localStorage only
-  const latestUrl = "";
-  const historyUrl = "";
+  const apiBase = (import.meta as any).env?.VITE_BACKEND_URL?.replace(/\/$/, "") || "";
+  const latestUrl = apiBase ? `${apiBase}/latest` : "/api/latest";
+  const historyUrl = apiBase ? `${apiBase}/history` : "/api/history";
   const minConfidence = 0.55;
   const minSmoothCount = 3;
   const maxStaleMs = 15000;
@@ -45,22 +45,46 @@ const ParentsDashboard: React.FC = () => {
 
   useEffect(() => {
     if (activeTab !== "eye") return;
+
     let isMounted = true;
-    const readLatest = () => {
-      if (!isMounted) return;
-      const cached = localStorage.getItem("latestEyeDetection");
-      if (cached) {
-        const normalized = normalizeEyeResult(JSON.parse(cached));
-        if (normalized) { setLatestEyeResult(normalized); setEyeStatus("Local cache"); }
-        else { setEyeStatus("Waiting for detection..."); }
-      } else {
-        setEyeStatus("Waiting for detection...");
+    const fetchLatest = async () => {
+      try {
+        const res = await fetch(latestUrl, { cache: "no-store" });
+        if (!res.ok) throw new Error("No data");
+        const data = await res.json();
+        if (!isMounted) return;
+        const normalized = normalizeEyeResult(data);
+        if (normalized) {
+          setLatestEyeResult(normalized);
+          setEyeStatus("Live updates");
+        } else {
+          setEyeStatus("Waiting for detection...");
+        }
+      } catch {
+        if (!isMounted) return;
+        const cached = localStorage.getItem("latestEyeDetection");
+        if (cached) {
+          const normalized = normalizeEyeResult(JSON.parse(cached));
+          if (normalized) {
+            setLatestEyeResult(normalized);
+            setEyeStatus("Local cache");
+          } else {
+            setEyeStatus("Waiting for detection...");
+          }
+        } else {
+          setEyeStatus("Waiting for detection...");
+        }
       }
     };
-    readLatest();
-    const id = window.setInterval(readLatest, 5000);
-    return () => { isMounted = false; window.clearInterval(id); };
-  }, [activeTab]);
+
+    fetchLatest();
+    const id = window.setInterval(fetchLatest, 5000);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(id);
+    };
+  }, [activeTab, latestUrl]);
 
   useEffect(() => {
     const readLearningStats = () => {
@@ -127,12 +151,29 @@ const ParentsDashboard: React.FC = () => {
     return () => window.clearInterval(id);
   }, []);
 
-  // History disabled — no backend running
+  // Fetch eye check history
   useEffect(() => {
     if (activeTab !== "eye") return;
-    setHistoryData(null);
-    setHistoryLoading(false);
-  }, [activeTab, historyPeriod]);
+
+    let isMounted = true;
+    const fetchHistory = async () => {
+      setHistoryLoading(true);
+      try {
+        const res = await fetch(`${historyUrl}?days=${historyPeriod}`, { cache: "no-store" });
+        if (!res.ok) throw new Error("No history data");
+        const data = await res.json();
+        if (!isMounted) return;
+        setHistoryData(data);
+      } catch (err) {
+        if (!isMounted) return;
+        setHistoryData(null);
+      } finally {
+        if (isMounted) setHistoryLoading(false);
+      }
+    };
+
+    fetchHistory();
+  }, [activeTab, historyPeriod, historyUrl]);
 
   const formatDuration = (ms: number) => {
     if (!ms) return "0 min";
