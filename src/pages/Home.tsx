@@ -34,7 +34,7 @@ const Home: React.FC = () => {
       title: "LETTERS",
       image: "letters.png",
       color: "#1E3A8A",
-      route: "/games/letters",
+      route: "/write-sense/landing-page",
       needsLoader: false,
     },
     {
@@ -49,13 +49,6 @@ const Home: React.FC = () => {
       image: "animalsounds.png",
       color: "#009688",
       route: "/learn",
-      needsLoader: false,
-    },
-    {
-      title: "WRITE SENSE",
-      image: "writesense.png",
-      color: "#1E3A8A",
-      route: "/write-sense/landing-page",
       needsLoader: false,
     },
     {
