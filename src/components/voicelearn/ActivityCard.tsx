@@ -40,7 +40,7 @@ export const VOICE_LEARN_DATA = [
   { char: 'U', word: 'Up', emoji: '⬆️' },        
   { char: 'V', word: 'Van', emoji: '🚐' },      
   { char: 'W', word: 'Web', emoji: '🕸️' },      
-  { char: 'X', word: 'X-ray', emoji: '🩻' }       
+  { char: 'X', word: 'X-ray', emoji: '🩻' },     
   { char: 'Y', word: 'Yo-yo', emoji: '🪀' },     
   { char: 'Z', word: 'Zoo', emoji: '🦒' }       
 ];
