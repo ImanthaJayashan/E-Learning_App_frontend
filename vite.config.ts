@@ -1,16 +1,26 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react-swc";
+import path from "path";
 
-// https://vite.dev/config/
+// https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
   server: {
+    host: "::",
+    port: 8081,
     proxy: {
+      // Local dev proxy — lets you test against the live HF Space
+      // without CORS issues during npm run dev
       '/api': {
-        target: 'http://127.0.0.1:5000',
+        target: 'https://yasithadulara-animal-sound-safari-backend.hf.space',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
+        secure: true,
       },
     },
   },
-})
+  plugins: [react()],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
+});

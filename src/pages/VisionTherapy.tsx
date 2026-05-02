@@ -5,8 +5,8 @@ import Footer from "../components/Footer";
 
 const VisionTherapy: React.FC = () => {
   const navigate = useNavigate();
-  const [_butterflyPositions, setButterflyPositions] = useState<Array<{ id: number; left: number; top: number }>>([]);
-  const [_showGlasses, setShowGlasses] = useState(false);
+  const [butterflyPositions, setButterflyPositions] = useState<Array<{ id: number; left: number; top: number }>>([]);
+  const [showGlasses, setShowGlasses] = useState(false);
 
   useEffect(() => {
     setShowGlasses(true);
