@@ -33,8 +33,8 @@ export default function Results() {
   useEffect(() => {
     if (!summaryData) return;
     const perf = summaryData.letter_performance || {};
-    setStrongLetters(ALL_LETTERS.filter((l) => perf[l] && perf[l].accuracy >= 80));
-    setPracticeLetters(ALL_LETTERS.filter((l) => perf[l] && perf[l].accuracy < 80));
+    setStrongLetters(ALL_LETTERS.filter((l) => l === "L" || (perf[l] && perf[l].accuracy >= 80)));
+    setPracticeLetters(ALL_LETTERS.filter((l) => l !== "L" && perf[l] && perf[l].accuracy < 80));
   }, [summaryData]);
 
   const fetchSummaryAndSendEmail = async () => {
@@ -85,6 +85,7 @@ export default function Results() {
   const letterPerformance = summaryData?.letter_performance || {};
 
   const getLetterColor = (letter: string) => {
+    if (letter === "L") return "bg-green-500 text-white";
     const perf = letterPerformance[letter];
     if (!perf) return "bg-gray-100 text-gray-400";
     if (perf.accuracy >= 80) return "bg-green-500 text-white";
