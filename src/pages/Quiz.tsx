@@ -1,8 +1,10 @@
 import { useRef, useState, useEffect } from "react";
-import { ALL_QUESTIONS, Question } from "../data/simpleQuestions";
-import KidCanvas, { KidCanvasRef } from "../components/KidCanvas";
+import { ALL_QUESTIONS, type Question } from "../../data/simpleQuestions";
+import KidCanvas, {
+  type KidCanvasRef,
+} from "../../components/writesense/KidCanvas";
 import { useNavigate } from "react-router-dom";
-import { BASEURL } from "../config/CONFIG";
+import { BASEURL } from "../../config/CONFIG";
 
 const LETTERS = [
   "A",
@@ -45,7 +47,7 @@ export default function Quiz() {
 
   const parentemail = localStorage.getItem("parentEmail") || "";
   if (!parentemail) {
-    navigate("/");
+    navigate("/write-sense/landing-page");
   }
 
   // ALL HOOKS MUST BE AT THE TOP - before any conditional returns
@@ -55,7 +57,7 @@ export default function Quiz() {
 
   useEffect(() => {
     if (quizComplete) {
-      navigate("/results", {
+      navigate("/write-sense/results", {
         state: {
           score,
           total: questions.length,
@@ -123,9 +125,10 @@ export default function Quiz() {
         if (correct) {
           setScore(score + 1);
           setCorrectLetters((prev) => [...prev, correctAnswer]);
+        } else {
+          setWeakLetters((prev) => [...prev, correctAnswer]);
         }
       } else {
-        setWeakLetters((prev) => [...prev, correctAnswer]);
         alert(`Error: ${data.error}`);
       }
     } catch (error) {
@@ -176,7 +179,7 @@ export default function Quiz() {
             onClick={handleRestart}
             className="px-6 py-2 bg-white rounded-full shadow-md hover:shadow-lg transition-all font-semibold text-gray-700"
           >
-            Start Quiz
+            Restart Quiz
           </button>
         </div>
       </div>

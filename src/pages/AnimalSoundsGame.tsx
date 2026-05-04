@@ -577,7 +577,7 @@ const Index = () => {
             <Button
               size="lg"
               onClick={playSound}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground text-xl px-8 py-6 rounded-2xl shadow-lg"
+              className="bg-purple-600 hover:bg-purple-700 text-white text-xl px-8 py-6 rounded-2xl shadow-lg"
             >
               <Volume2 className="mr-2 h-6 w-6" />
               Play Sound
@@ -756,7 +756,7 @@ const Index = () => {
                 }
               }}
             >
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
                 <DialogHeader>
                   <DialogTitle className="text-2xl mb-4">
                     {predictionResult.recommendation.title}

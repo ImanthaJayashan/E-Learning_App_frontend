@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
-import { BASEURL } from "../config/CONFIG";
+import { BASEURL } from "../../config/CONFIG";
 
 export default function Results() {
   const navigate = useNavigate();
@@ -9,13 +9,11 @@ export default function Results() {
     "sending",
   );
   const [summaryData, setSummaryData] = useState<any>(null);
-  const emailSentRef = useRef(false); // Prevent duplicate sends
+  const emailSentRef = useRef(false);
 
   const parentEmail = localStorage.getItem("parentEmail") || "";
 
   useEffect(() => {
-    // Automatically fetch summary and send email when component mounts
-    // Only send once using ref
     if (parentEmail && !emailSentRef.current) {
       emailSentRef.current = true;
       fetchSummaryAndSendEmail();
@@ -24,7 +22,6 @@ export default function Results() {
 
   const fetchSummaryAndSendEmail = async () => {
     try {
-      // First fetch the summary
       const summaryResponse = await fetch(
         `${BASEURL}/get-summary/${encodeURIComponent(parentEmail)}`,
       );
@@ -34,7 +31,6 @@ export default function Results() {
         setSummaryData(data);
       }
 
-      // Then automatically send the email
       const emailResponse = await fetch(`${BASEURL}/send-summary`, {
         method: "POST",
         headers: {
@@ -59,7 +55,7 @@ export default function Results() {
   };
 
   const handleRetry = () => {
-    emailSentRef.current = false; // Reset the ref to allow retry
+    emailSentRef.current = false;
     setEmailStatus("sending");
     fetchSummaryAndSendEmail();
   };
@@ -72,35 +68,20 @@ export default function Results() {
     );
   }
 
-  const { score, total, correctLetters, weakLetters } = state;
+  const { score, total } = state;
   const accuracy = Math.round((score / total) * 100);
 
-  // Get letter performance heatmap data
+  // Get letter performance heatmap data from API
   const letterPerformance = summaryData?.letter_performance || {};
+
   const allLetters = [
-    "A",
-    "B",
-    "C",
-    "D",
-    "E",
-    "F",
-    "G",
-    "H",
-    "J",
-    "L",
-    "N",
-    "O",
-    "P",
-    "R",
-    "S",
-    "U",
-    "V",
+    "A", "B", "C", "D", "E", "F", "G", "H", "J",
+    "L", "N", "O", "P", "R", "S", "U", "V",
   ];
 
   const getLetterColor = (letter: string) => {
     const perf = letterPerformance[letter];
     if (!perf) return "bg-gray-100 text-gray-400";
-
     const acc = perf.accuracy;
     if (acc >= 80) return "bg-green-500 text-white";
     if (acc >= 60) return "bg-yellow-400 text-white";
@@ -110,9 +91,14 @@ export default function Results() {
   const getLetterTooltip = (letter: string) => {
     const perf = letterPerformance[letter];
     if (!perf) return "Not attempted";
-
     return `${perf.accuracy.toFixed(0)}% accuracy${perf.flipped > 0 ? " (flipped)" : ""}`;
   };
+
+  // Strong = green (80%+) from heatmap
+  const strongLetters = allLetters.filter(
+    (l) => getLetterColor(l) === "bg-green-500 text-white"
+  );
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-300 via-pink-300 to-yellow-200 flex items-center justify-center p-6">
@@ -130,18 +116,14 @@ export default function Results() {
 
         {/* Main Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Score Card */}
           <div className="bg-gradient-to-br from-purple-100 to-purple-200 rounded-3xl p-8 text-center shadow-lg">
             <div className="text-6xl font-extrabold text-purple-600 mb-2">
               {score}
               <span className="text-3xl text-purple-400">/{total}</span>
             </div>
-            <p className="text-lg font-semibold text-purple-700">
-              Letters Correct
-            </p>
+            <p className="text-lg font-semibold text-purple-700">Letters Correct</p>
           </div>
 
-          {/* Accuracy Card */}
           <div className="bg-gradient-to-br from-green-100 to-green-200 rounded-3xl p-8 text-center shadow-lg">
             <div className="text-6xl font-extrabold text-green-600 mb-2">
               {accuracy}%
@@ -149,14 +131,11 @@ export default function Results() {
             <p className="text-lg font-semibold text-green-700">Accuracy</p>
           </div>
 
-          {/* Flipped Letters Card */}
           <div className="bg-gradient-to-br from-blue-100 to-blue-200 rounded-3xl p-8 text-center shadow-lg">
             <div className="text-6xl font-extrabold text-blue-600 mb-2">
               {summaryData?.flipped_attempts || 0}
             </div>
-            <p className="text-lg font-semibold text-blue-700">
-              Mirror Writing
-            </p>
+            <p className="text-lg font-semibold text-blue-700">Mirror Writing</p>
           </div>
         </div>
 
@@ -180,8 +159,6 @@ export default function Results() {
                       🔄
                     </span>
                   )}
-
-                  {/* Tooltip */}
                   <div className="absolute bottom-full mb-2 hidden group-hover:block bg-gray-900 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10">
                     {getLetterTooltip(letter)}
                   </div>
@@ -211,49 +188,32 @@ export default function Results() {
           </div>
         </div>
 
-        {/* Letter Categories */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Letter Categories — driven entirely from heatmap API data */}
+        <div className="grid grid-cols-1 gap-6">
           {/* Strong Letters */}
           <div className="bg-green-50 rounded-3xl p-6 shadow-lg border-2 border-green-200">
             <h3 className="text-2xl font-bold text-green-700 mb-4 flex items-center gap-2">
               💚 Strong Letters
             </h3>
             <div className="flex flex-wrap gap-3">
-              {correctLetters.length > 0 ? (
-                correctLetters.map((l: string) => (
+              {strongLetters.length > 0 ? (
+                strongLetters.map((l) => (
                   <span
                     key={l}
+                    title={getLetterTooltip(l)}
                     className="w-14 h-14 flex items-center justify-center rounded-2xl bg-green-500 text-white text-2xl font-extrabold shadow-md"
                   >
                     {l}
                   </span>
                 ))
               ) : (
-                <p className="text-gray-500">Keep practicing!</p>
+                <p className="text-gray-500">
+                  {summaryData ? "Keep practicing!" : "Loading..."}
+                </p>
               )}
             </div>
           </div>
 
-          {/* Practice More */}
-          <div className="bg-orange-50 rounded-3xl p-6 shadow-lg border-2 border-orange-200">
-            <h3 className="text-2xl font-bold text-orange-700 mb-4 flex items-center gap-2">
-              💡 Practice More
-            </h3>
-            <div className="flex flex-wrap gap-3">
-              {weakLetters.length > 0 ? (
-                weakLetters.map((l: string) => (
-                  <span
-                    key={l}
-                    className="w-14 h-14 flex items-center justify-center rounded-2xl bg-orange-400 text-white text-2xl font-extrabold shadow-md"
-                  >
-                    {l}
-                  </span>
-                ))
-              ) : (
-                <p className="text-gray-500">All perfect! 🌟</p>
-              )}
-            </div>
-          </div>
         </div>
 
         {/* Email Status Section */}
@@ -262,26 +222,24 @@ export default function Results() {
             emailStatus === "sent"
               ? "bg-green-50 border-green-300"
               : emailStatus === "error"
-                ? "bg-red-50 border-red-300"
-                : "bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200"
+              ? "bg-red-50 border-red-300"
+              : "bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200"
           }`}
         >
           {emailStatus === "sending" && (
-            <>
-              <div className="text-center">
-                <div className="text-5xl mb-4 animate-pulse">📧</div>
-                <h3 className="text-2xl font-bold text-purple-700 mb-2">
-                  Sending Detailed Report...
-                </h3>
-                <p className="text-gray-600">
-                  Generating comprehensive AI analysis and sending to:{" "}
-                  <strong>{parentEmail}</strong>
-                </p>
-                <div className="mt-4">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-                </div>
+            <div className="text-center">
+              <div className="text-5xl mb-4 animate-pulse">📧</div>
+              <h3 className="text-2xl font-bold text-purple-700 mb-2">
+                Sending Detailed Report...
+              </h3>
+              <p className="text-gray-600">
+                Generating comprehensive AI analysis and sending to:{" "}
+                <strong>{parentEmail}</strong>
+              </p>
+              <div className="mt-4">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
               </div>
-            </>
+            </div>
           )}
 
           {emailStatus === "sent" && (
@@ -291,8 +249,8 @@ export default function Results() {
                 Email Sent Successfully!
               </h3>
               <p className="text-gray-600">
-                A detailed handwriting analysis report with AI-generated
-                insights and practice suggestions has been sent to{" "}
+                A detailed handwriting analysis report with AI-generated insights
+                and practice suggestions has been sent to{" "}
                 <strong>{parentEmail}</strong>
               </p>
               <p className="text-sm text-gray-500 mt-3">
@@ -323,14 +281,14 @@ export default function Results() {
         {/* Action Buttons */}
         <div className="flex justify-center gap-6 pt-4">
           <button
-            onClick={() => navigate("/quiz")}
+            onClick={() => navigate("/write-sense/quiz")}
             className="px-10 py-4 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-extrabold text-xl shadow-xl hover:scale-105 transition-all"
           >
             🔄 Play Again
           </button>
 
           <button
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/write-sense/landing-page")}
             className="px-10 py-4 rounded-full bg-white border-4 border-purple-400 text-purple-600 font-extrabold text-xl shadow-xl hover:scale-105 transition-all"
           >
             🏠 Home
